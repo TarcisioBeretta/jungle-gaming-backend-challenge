@@ -1,0 +1,12 @@
+FROM ubuntu:22.04
+
+WORKDIR /workspace
+
+# Install system packages required for VS Code extensions and tooling
+RUN apt-get update && apt-get install -y git curl unzip && rm -rf /var/lib/apt/lists/*
+
+# Install Bun
+RUN curl -fsSL https://bun.sh/install | bash
+ENV PATH="/root/.bun/bin:${PATH}"
+
+CMD ["sleep", "infinity"]

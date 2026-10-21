@@ -2,7 +2,9 @@ version: '3.8'
 
 services:
   app:
-    image: oven/bun:1.1
+    build:
+      context: ..
+      dockerfile: .devcontainer/Dockerfile.dev
     container_name: jungle-gaming-app-dev
     working_dir: /workspace
     volumes:

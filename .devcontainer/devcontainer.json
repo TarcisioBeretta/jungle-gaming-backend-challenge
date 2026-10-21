@@ -6,12 +6,12 @@
   "customizations": {
     "vscode": {
       "settings": {
-        "typescript.tsdk": "node_modules/typescript/lib"
+        "js/ts.tsdk.path": "node_modules/typescript/lib"
       },
       "extensions": [
         "dbaeumer.vscode-eslint",
         "esbenp.prettier-vscode",
-        "firsttris.vscode-jest-runner",
+        "firsttris.vscode-jest-runner"
       ]
     }
   },
