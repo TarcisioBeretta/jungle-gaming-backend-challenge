@@ -41,8 +41,26 @@ export class Money {
     return new Money(this.value.plus(other.value), this.currency);
   }
 
+  public subtract(other: Money): Money {
+    if (this.currency !== other.currency) {
+      throw new CurrencyMismatchError(this.currency, other.currency);
+    }
+    const newValue = this.value.minus(other.value);
+    if (newValue.isNegative()) {
+      throw new NegativeMoneyError(newValue.toString());
+    }
+    return new Money(newValue, this.currency);
+  }
+
   public equals(other: Money): boolean {
     return this.currency === other.currency && this.value.equals(other.value);
+  }
+
+  public isLessThan(other: Money): boolean {
+    if (this.currency !== other.currency) {
+      throw new CurrencyMismatchError(this.currency, other.currency);
+    }
+    return this.value.lessThan(other.value);
   }
 
   public toString(): string {
@@ -53,7 +71,7 @@ export class Money {
     return this.toString();
   }
 
-  private static parseToDecimal(amount: string){
+  private static parseToDecimal(amount: string) {
     try {
       return new Decimal(amount);
     } catch {
