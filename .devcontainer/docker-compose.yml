@@ -7,6 +7,8 @@ services:
       dockerfile: .devcontainer/Dockerfile.dev
     container_name: jungle-gaming-app-dev
     working_dir: /workspace
+    ports:
+      - "3000:3000"
     volumes:
       - ..:/workspace:cached
     command: sleep infinity
