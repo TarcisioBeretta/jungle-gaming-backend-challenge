@@ -1,0 +1,20 @@
+{
+  "name": "jungle-gaming DevContainer",
+  "dockerComposeFile": ["docker-compose.yml"],
+  "service": "app",
+  "workspaceFolder": "/workspace",
+  "customizations": {
+    "vscode": {
+      "settings": {
+        "typescript.tsdk": "node_modules/typescript/lib"
+      },
+      "extensions": [
+        "dbaeumer.vscode-eslint",
+        "esbenp.prettier-vscode",
+        "firsttris.vscode-jest-runner",
+      ]
+    }
+  },
+  "forwardPorts": [3000, 5432, 4566],
+  "remoteUser": "root"
+}

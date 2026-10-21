@@ -1,0 +1,50 @@
+version: '3.8'
+
+services:
+  app:
+    image: oven/bun:1.1
+    container_name: jungle-gaming-app
+    working_dir: /workspace
+    ports:
+      - "3000:3000"
+    volumes:
+      - .:/workspace
+      - /workspace/node_modules
+    command: bun run start:dev
+    depends_on:
+      postgres:
+        condition: service_healthy
+      localstack:
+        condition: service_started
+
+  postgres:
+    image: postgres:16-alpine
+    container_name: jungle-gaming-postgres
+    environment:
+      POSTGRES_DB: wagering_db
+      POSTGRES_USER: wagering_user
+      POSTGRES_PASSWORD: wagering_pass
+    ports:
+      - "5432:5432"
+    volumes:
+      - jungle_gaming_postgres_data:/var/lib/postgresql/data
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U wagering_user -d wagering_db"]
+      interval: 5s
+      timeout: 5s
+      retries: 5
+
+  localstack:
+    image: localstack/localstack:latest
+    container_name: jungle-gaming-localstack
+    ports:
+      - "4566:4566"
+    environment:
+      - SERVICES=sqs
+      - DEFAULT_REGION=us-east-1
+      - AWS_DEFAULT_REGION=us-east-1
+    volumes:
+      - /var/run/docker.sock:/var/run/docker.sock
+
+volumes:
+  jungle_gaming_postgres_data:
