@@ -1,10 +1,15 @@
 import { WagerTransactionRepository } from '../ports/wager-transaction.repository';
 import { WalletRepository } from '../ports/wallet.repository';
+import { WalletLedgerRepository } from '../ports/wallet-ledger.repository';
 import { UnitOfWork } from '../ports/unit-of-work.interface';
 import { WagerTransaction } from '../../domain/wager/wager-transaction.aggregate';
 import { WagerTransactionKind } from '../../domain/wager/wager-transaction-kind.enum';
+import { Wallet } from '../../domain/wallet/wallet.aggregate';
+import { WalletLedgerEntry } from '../../domain/ledger/wallet-ledger-entry.entity';
+import { WalletLedgerEntryKind } from '../../domain/ledger/wallet-ledger-entry-kind.enum';
 import { Money } from '../../domain/value-objects/money.value-object';
 import { WalletNotFoundError } from '../../domain/errors/wallet-not-found.error';
+import { OriginalTransactionNotFoundError } from '../../domain/errors/original-transaction-not-found.error';
 
 export interface ProcessRollbackCommand {
   providerId: string;
@@ -20,10 +25,50 @@ export interface ProcessRollbackCommand {
   referenceExternalTransactionId: string;
 }
 
+interface RollbackStrategy {
+  ledgerKind: WalletLedgerEntryKind | null;
+  updateWallet: (wallet: Wallet, money: Money) => void;
+  shouldUpdateWallet: boolean;
+}
+
 export class ProcessRollbackUseCase {
+  private static readonly ROLLBACK_STRATEGIES: Record<WagerTransactionKind, RollbackStrategy> = {
+    [WagerTransactionKind.Win]: {
+      ledgerKind: WalletLedgerEntryKind.DEBIT,
+      updateWallet: (wallet, money) => wallet.debit(money),
+      shouldUpdateWallet: true,
+    },
+    [WagerTransactionKind.Refund]: {
+      ledgerKind: WalletLedgerEntryKind.DEBIT,
+      updateWallet: (wallet, money) => wallet.debit(money),
+      shouldUpdateWallet: true,
+    },
+    [WagerTransactionKind.Opening]: {
+      ledgerKind: WalletLedgerEntryKind.DEBIT,
+      updateWallet: (wallet, money) => wallet.debit(money),
+      shouldUpdateWallet: true,
+    },
+    [WagerTransactionKind.Bet]: {
+      ledgerKind: WalletLedgerEntryKind.CREDIT,
+      updateWallet: (wallet, money) => wallet.credit(money),
+      shouldUpdateWallet: true,
+    },
+    [WagerTransactionKind.Loss]: {
+      ledgerKind: null,
+      updateWallet: () => {},
+      shouldUpdateWallet: false,
+    },
+    [WagerTransactionKind.Rollback]: {
+      ledgerKind: null,
+      updateWallet: () => {},
+      shouldUpdateWallet: false,
+    },
+  };
+
   constructor(
     private readonly wagerTransactionRepository: WagerTransactionRepository,
     private readonly walletRepository: WalletRepository,
+    private readonly walletLedgerRepository: WalletLedgerRepository,
     private readonly unitOfWork: UnitOfWork,
   ) {}
 
@@ -46,7 +91,17 @@ export class ProcessRollbackUseCase {
       currency: command.currency,
     });
 
-    wallet.credit(money);
+    const originalTransaction = await this.wagerTransactionRepository.findByProviderAndExternalId(
+      command.providerId,
+      command.referenceExternalTransactionId,
+    );
+
+    if (!originalTransaction) {
+      throw new OriginalTransactionNotFoundError(command.referenceExternalTransactionId);
+    }
+
+    const strategy = ProcessRollbackUseCase.ROLLBACK_STRATEGIES[originalTransaction.kind];
+    strategy.updateWallet(wallet, money);
 
     const wagerTransaction = WagerTransaction.create({
       providerId: command.providerId,
@@ -65,7 +120,21 @@ export class ProcessRollbackUseCase {
     wagerTransaction.markProcessedWithReference(command.referenceExternalTransactionId);
 
     await this.wagerTransactionRepository.add(wagerTransaction);
-    await this.walletRepository.update(wallet);
+
+    if (strategy.ledgerKind) {
+      const ledgerEntry = WalletLedgerEntry.create({
+        walletId: wallet.id,
+        transactionId: wagerTransaction.id,
+        kind: strategy.ledgerKind,
+        money,
+      });
+      await this.walletLedgerRepository.add(ledgerEntry);
+    }
+
+    if (strategy.shouldUpdateWallet) {
+      await this.walletRepository.update(wallet);
+    }
+
     await this.unitOfWork.commit();
 
     return wagerTransaction;
