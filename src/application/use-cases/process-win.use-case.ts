@@ -1,8 +1,11 @@
 import { WagerTransactionRepository } from '../ports/wager-transaction.repository';
 import { WalletRepository } from '../ports/wallet.repository';
+import { WalletLedgerRepository } from '../ports/wallet-ledger.repository';
 import { UnitOfWork } from '../ports/unit-of-work.interface';
 import { WagerTransaction } from '../../domain/wager/wager-transaction.aggregate';
 import { WagerTransactionKind } from '../../domain/wager/wager-transaction-kind.enum';
+import { WalletLedgerEntry } from '../../domain/ledger/wallet-ledger-entry.entity';
+import { WalletLedgerEntryKind } from '../../domain/ledger/wallet-ledger-entry-kind.enum';
 import { Money } from '../../domain/value-objects/money.value-object';
 import { WalletNotFoundError } from '../../domain/errors/wallet-not-found.error';
 
@@ -23,6 +26,7 @@ export class ProcessWinUseCase {
   constructor(
     private readonly wagerTransactionRepository: WagerTransactionRepository,
     private readonly walletRepository: WalletRepository,
+    private readonly walletLedgerRepository: WalletLedgerRepository,
     private readonly unitOfWork: UnitOfWork,
   ) {}
 
@@ -62,7 +66,15 @@ export class ProcessWinUseCase {
 
     wagerTransaction.markProcessed();
 
+    const ledgerEntry = WalletLedgerEntry.create({
+      walletId: wallet.id,
+      transactionId: wagerTransaction.id,
+      kind: WalletLedgerEntryKind.CREDIT,
+      money,
+    });
+
     await this.wagerTransactionRepository.add(wagerTransaction);
+    await this.walletLedgerRepository.add(ledgerEntry);
     await this.walletRepository.update(wallet);
     await this.unitOfWork.commit();
 
