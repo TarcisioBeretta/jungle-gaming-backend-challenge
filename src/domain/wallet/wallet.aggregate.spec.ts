@@ -13,13 +13,13 @@ describe('Wallet Aggregate', () => {
     expect(wallet.id).toBeDefined();
     expect(typeof wallet.id).toBe('string');
     expect(wallet.playerId).toBe('player-456');
-    expect(wallet.currentBalance.amount).toBe('0.00');
-    expect(wallet.currentBalance.currency).toBe('BRL');
+    expect(wallet.balance.amount).toBe('0.00');
+    expect(wallet.balance.currency).toBe('BRL');
   });
 
   it('should restore a wallet with an existing id and balance', () => {
     const balance = Money.from({ amount: '150.00', currency: 'USD' });
-    const wallet = Wallet.restore('wallet-123', 'player-456', balance);
+    const wallet = Wallet.restore('wallet-123', 'player-456', 'USD', balance, 1, new Date(), new Date());
 
     expect(wallet.id).toBe('wallet-123');
     expect(wallet.playerId).toBe('player-456');
@@ -43,7 +43,11 @@ describe('Wallet Aggregate', () => {
     const wallet = Wallet.restore(
       'wallet-123',
       'player-456',
+      'BRL',
       Money.from({ amount: '200.00', currency: 'BRL' }),
+      1,
+      new Date(),
+      new Date(),
     );
 
     wallet.debit(Money.from({ amount: '75.25', currency: 'BRL' }));
@@ -55,7 +59,11 @@ describe('Wallet Aggregate', () => {
     const wallet = Wallet.restore(
       'wallet-123',
       'player-456',
+      'BRL',
       Money.from({ amount: '50.00', currency: 'BRL' }),
+      1,
+      new Date(),
+      new Date(),
     );
 
     expect(() => {

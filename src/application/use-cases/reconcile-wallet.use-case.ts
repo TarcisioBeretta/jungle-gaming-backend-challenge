@@ -36,7 +36,7 @@ export class ReconcileWalletUseCase {
       input.walletId,
     );
 
-    let calculatedBalance = Money.zero(wallet.currentBalance.currency);
+    let calculatedBalance = Money.zero(wallet.balance.currency);
 
     for (const entry of entries) {
       if (entry.kind === WalletLedgerEntryKind.CREDIT) {
@@ -46,9 +46,15 @@ export class ReconcileWalletUseCase {
       }
     }
 
-    const storedBalance = wallet.currentBalance;
-    const difference = calculatedBalance.subtract(storedBalance);
+    const storedBalance = wallet.balance;
     const consistent = calculatedBalance.equals(storedBalance);
+
+    let difference: Money;
+    if (consistent) {
+      difference = Money.zero(wallet.balance.currency);
+    } else {
+      difference = calculatedBalance.subtract(storedBalance);
+    }
 
     return {
       walletId: wallet.id,

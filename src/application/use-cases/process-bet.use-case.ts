@@ -49,7 +49,9 @@ export class ProcessBetUseCase {
       currency: command.currency,
     });
 
+    const balanceBefore = wallet.balance;
     wallet.debit(money);
+    const balanceAfter = wallet.balance;
 
     const wagerTransaction = WagerTransaction.create({
       providerId: command.providerId,
@@ -71,6 +73,8 @@ export class ProcessBetUseCase {
       transactionId: wagerTransaction.id,
       kind: WalletLedgerEntryKind.DEBIT,
       money,
+      balanceBefore,
+      balanceAfter,
     });
 
     await this.wagerTransactionRepository.add(wagerTransaction);

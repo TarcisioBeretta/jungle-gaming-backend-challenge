@@ -11,7 +11,11 @@ describe('GetWalletUseCase', () => {
     const mockWallet = Wallet.restore(
       'wallet-123',
       'player-456',
+      'BRL',
       Money.from({ amount: '100.00', currency: 'BRL' }),
+      1,
+      new Date(),
+      new Date(),
     );
 
     const mockWalletRepository: WalletRepository = {

@@ -101,7 +101,10 @@ export class ProcessRollbackUseCase {
     }
 
     const strategy = ProcessRollbackUseCase.ROLLBACK_STRATEGIES[originalTransaction.kind];
+
+    const balanceBefore = wallet.balance;
     strategy.updateWallet(wallet, money);
+    const balanceAfter = wallet.balance;
 
     const wagerTransaction = WagerTransaction.create({
       providerId: command.providerId,
@@ -127,6 +130,8 @@ export class ProcessRollbackUseCase {
         transactionId: wagerTransaction.id,
         kind: strategy.ledgerKind,
         money,
+        balanceBefore,
+        balanceAfter,
       });
       await this.walletLedgerRepository.add(ledgerEntry);
     }

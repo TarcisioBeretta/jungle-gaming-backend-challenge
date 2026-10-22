@@ -16,7 +16,7 @@ import { WalletNotFoundError } from '../../domain/errors/wallet-not-found.error'
 describe('ProcessRefundUseCase', () => {
   it('should successfully process a refund, credit the wallet, create CREDIT ledger entry, mark transaction as processed with reference and commit', async () => {
     const initialBalance = Money.from({ amount: '70.00', currency: 'BRL' });
-    const wallet = Wallet.restore('wallet-1', 'player-1', initialBalance);
+    const wallet = Wallet.restore('wallet-1', 'player-1', 'BRL', initialBalance, 1, new Date(), new Date());
 
     let commitCalled = false;
     let addedTransaction: WagerTransaction | null = null;

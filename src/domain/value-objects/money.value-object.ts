@@ -50,9 +50,6 @@ export class Money {
       throw new CurrencyMismatchError(this.currency, other.currency);
     }
     const newValue = this.value.minus(other.value);
-    if (newValue.isNegative()) {
-      throw new NegativeMoneyError(newValue.toString());
-    }
     return new Money(newValue, this.currency);
   }
 
@@ -77,6 +74,13 @@ export class Money {
 
   public get amount(): string {
     return this.toString();
+  }
+
+  public toJSON(): MoneyProps {
+    return {
+      amount: this.toString(),
+      currency: this.currency,
+    };
   }
 
   private static parseToDecimal(amount: string) {

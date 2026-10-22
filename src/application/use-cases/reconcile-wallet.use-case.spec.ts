@@ -11,7 +11,7 @@ import { WalletNotFoundError } from '../../domain/errors/wallet-not-found.error'
 describe('ReconcileWalletUseCase', () => {
   it('should successfully reconcile a consistent wallet', async () => {
     const initialMoney = Money.from({ amount: '100.00', currency: 'BRL' });
-    const wallet = Wallet.restore('wallet-123', 'player-1', initialMoney);
+    const wallet = Wallet.restore('wallet-123', 'player-1', 'BRL', initialMoney, 1, new Date(), new Date());
 
     const ledgerEntries = [
       WalletLedgerEntry.restore(
@@ -49,7 +49,7 @@ describe('ReconcileWalletUseCase', () => {
 
   it('should detect inconsistency when stored balance differs from ledger calculation', async () => {
     const initialMoney = Money.from({ amount: '100.00', currency: 'BRL' });
-    const wallet = Wallet.restore('wallet-123', 'player-1', initialMoney);
+    const wallet = Wallet.restore('wallet-123', 'player-1', 'BRL', initialMoney, 1, new Date(), new Date());
 
     const ledgerEntries = [
       WalletLedgerEntry.restore(

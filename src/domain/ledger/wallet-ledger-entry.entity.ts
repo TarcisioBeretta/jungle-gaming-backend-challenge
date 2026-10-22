@@ -1,3 +1,4 @@
+import { LedgerEntryBalanceInconsistentError } from '../errors/ledger-entry-balance-inconsistent.error';
 import { Money } from '../value-objects/money.value-object';
 import { WalletLedgerEntryKind } from './wallet-ledger-entry-kind.enum';
 
@@ -8,6 +9,8 @@ export class WalletLedgerEntry {
     private readonly _transactionId: string,
     private readonly _kind: WalletLedgerEntryKind,
     private readonly _money: Money,
+    private readonly _balanceBefore: Money,
+    private readonly _balanceAfter: Money,
     private readonly _createdAt: Date,
   ) {}
 
@@ -17,15 +20,26 @@ export class WalletLedgerEntry {
     transactionId: string;
     kind: WalletLedgerEntryKind;
     money: Money;
+    balanceBefore?: Money;
+    balanceAfter?: Money;
   }): WalletLedgerEntry {
-    return new WalletLedgerEntry(
+    const balanceBefore = props.balanceBefore ?? Money.zero(props.money.currency);
+    const balanceAfter = props.balanceAfter ?? this.calculateBalanceAfter(props.kind, balanceBefore, props.money);
+
+    const entry = new WalletLedgerEntry(
       props.id ?? crypto.randomUUID(),
       props.walletId,
       props.transactionId,
       props.kind,
       props.money,
+      balanceBefore,
+      balanceAfter,
       new Date(),
     );
+
+    entry.validateBalance();
+
+    return entry;
   }
 
   public static restore(
@@ -35,8 +49,38 @@ export class WalletLedgerEntry {
     kind: WalletLedgerEntryKind,
     money: Money,
     createdAt: Date,
+    balanceBefore?: Money,
+    balanceAfter?: Money,
   ): WalletLedgerEntry {
-    return new WalletLedgerEntry(id, walletId, transactionId, kind, money, createdAt);
+    const resolvedBalanceBefore = balanceBefore ?? Money.zero(money.currency);
+    const resolvedBalanceAfter = balanceAfter ?? this.calculateBalanceAfter(kind, resolvedBalanceBefore, money);
+
+    const entry = new WalletLedgerEntry(
+      id,
+      walletId,
+      transactionId,
+      kind,
+      money,
+      resolvedBalanceBefore,
+      resolvedBalanceAfter,
+      createdAt,
+    );
+
+    entry.validateBalance();
+
+    return entry;
+  }
+
+  private static calculateBalanceAfter(
+    kind: WalletLedgerEntryKind,
+    balanceBefore: Money,
+    money: Money,
+  ): Money {
+    if (kind === WalletLedgerEntryKind.CREDIT) {
+      return balanceBefore.add(money);
+    }
+
+    return balanceBefore.subtract(money);
   }
 
   public get id(): string {
@@ -61,5 +105,27 @@ export class WalletLedgerEntry {
 
   public get createdAt(): Date {
     return this._createdAt;
+  }
+
+  public get balanceBefore(): Money {
+    return this._balanceBefore;
+  }
+
+  public get balanceAfter(): Money {
+    return this._balanceAfter;
+  }
+
+  public isBalanced(): boolean {
+    if (this._kind === WalletLedgerEntryKind.CREDIT) {
+      return this._balanceAfter.equals(this._balanceBefore.add(this._money));
+    } else {
+      return this._balanceAfter.equals(this._balanceBefore.subtract(this._money));
+    }
+  }
+
+  private validateBalance(): void {
+    if (!this.isBalanced()) {
+      throw new LedgerEntryBalanceInconsistentError(this._id);
+    }
   }
 }

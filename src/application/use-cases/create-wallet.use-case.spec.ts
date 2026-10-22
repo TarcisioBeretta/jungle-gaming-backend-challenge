@@ -6,6 +6,7 @@ import { UnitOfWork } from '../ports/unit-of-work.interface';
 import { Wallet } from '../../domain/wallet/wallet.aggregate';
 import { WagerTransaction } from '../../domain/wager/wager-transaction.aggregate';
 import { WagerTransactionKind } from '../../domain/wager/wager-transaction-kind.enum';
+import { WalletLedgerRepository } from '../ports/wallet-ledger.repository';
 
 describe('CreateWalletUseCase', () => {
   it('should successfully create a wallet with zero balance, add it to repository and commit transaction without opening transaction', async () => {
@@ -30,6 +31,12 @@ describe('CreateWalletUseCase', () => {
       update: mock(async () => {}),
     };
 
+    const mockWalletLedgerRepository: WalletLedgerRepository = {
+      add: mock(async () => {}),
+      findByWalletIdPaginated: mock(async () => []),
+      findAllByWalletId: mock(async () => []),
+    };
+
     const mockUnitOfWork: UnitOfWork = {
       commit: mock(async () => {
         commitCalled = true;
@@ -39,6 +46,7 @@ describe('CreateWalletUseCase', () => {
     const useCase = new CreateWalletUseCase(
       mockWalletRepository,
       mockWagerTransactionRepository,
+      mockWalletLedgerRepository,
       mockUnitOfWork,
     );
 
@@ -80,6 +88,12 @@ describe('CreateWalletUseCase', () => {
       update: mock(async () => {}),
     };
 
+    const mockWalletLedgerRepository: WalletLedgerRepository = {
+      add: mock(async () => {}),
+      findByWalletIdPaginated: mock(async () => []),
+      findAllByWalletId: mock(async () => []),
+    };
+
     const mockUnitOfWork: UnitOfWork = {
       commit: mock(async () => {
         commitCalled = true;
@@ -89,6 +103,7 @@ describe('CreateWalletUseCase', () => {
     const useCase = new CreateWalletUseCase(
       mockWalletRepository,
       mockWagerTransactionRepository,
+      mockWalletLedgerRepository,
       mockUnitOfWork,
     );
 

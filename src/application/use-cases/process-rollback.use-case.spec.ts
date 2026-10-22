@@ -31,7 +31,7 @@ describe('ProcessRollbackUseCase', () => {
 
   it('should successfully process a rollback for a Bet (credit wallet, create CREDIT ledger entry, and commit)', async () => {
     const initialBalance = Money.from({ amount: '70.00', currency: 'BRL' });
-    const wallet = Wallet.restore('wallet-1', 'player-1', initialBalance);
+    const wallet = Wallet.restore('wallet-1', 'player-1', 'BRL', initialBalance, 1, new Date(), new Date());
 
     const originalBet = WagerTransaction.create({
       providerId: 'provider-a',
@@ -108,7 +108,7 @@ describe('ProcessRollbackUseCase', () => {
 
   it('should successfully process a rollback for a Win (debit wallet, create DEBIT ledger entry)', async () => {
     const initialBalance = Money.from({ amount: '200.00', currency: 'BRL' });
-    const wallet = Wallet.restore('wallet-1', 'player-1', initialBalance);
+    const wallet = Wallet.restore('wallet-1', 'player-1', 'BRL', initialBalance, 1, new Date(), new Date());
 
     const originalWin = WagerTransaction.create({
       providerId: 'provider-a',
@@ -174,7 +174,7 @@ describe('ProcessRollbackUseCase', () => {
 
   it('should successfully process a rollback for a Loss (no balance change, no ledger entry)', async () => {
     const initialBalance = Money.from({ amount: '100.00', currency: 'BRL' });
-    const wallet = Wallet.restore('wallet-1', 'player-1', initialBalance);
+    const wallet = Wallet.restore('wallet-1', 'player-1', 'BRL', initialBalance, 1, new Date(), new Date());
 
     const originalLoss = WagerTransaction.create({
       providerId: 'provider-a',
@@ -337,7 +337,7 @@ describe('ProcessRollbackUseCase', () => {
   });
 
   it('should throw OriginalTransactionNotFoundError when original transaction does not exist', async () => {
-    const wallet = Wallet.restore('wallet-1', 'player-1', Money.from({ amount: '100.00', currency: 'BRL' }));
+    const wallet = Wallet.restore('wallet-1', 'player-1', 'BRL', Money.from({ amount: '100.00', currency: 'BRL' }), 1, new Date(), new Date());
 
     const mockWagerTransactionRepository: WagerTransactionRepository = {
       findById: mock(async () => null),
