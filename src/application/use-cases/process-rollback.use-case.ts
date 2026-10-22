@@ -3,7 +3,7 @@ import { WalletRepository } from '../ports/wallet.repository';
 import { UnitOfWork } from '../ports/unit-of-work.interface';
 import { WagerTransaction } from '../../domain/wager/wager-transaction.aggregate';
 import { WagerTransactionKind } from '../../domain/wager/wager-transaction-kind.enum';
-import { Money } from '../../domain/wallet/money.value-object';
+import { Money } from '../../domain/value-objects/money.value-object';
 import { WalletNotFoundError } from '../../domain/errors/wallet-not-found.error';
 
 export interface ProcessRollbackCommand {

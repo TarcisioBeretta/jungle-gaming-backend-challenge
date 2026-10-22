@@ -3,7 +3,7 @@ import { GetWagerTransactionByIdUseCase } from './get-wager-transaction-by-id.us
 import { WagerTransactionRepository } from '../ports/wager-transaction.repository';
 import { WagerTransaction } from '../../domain/wager/wager-transaction.aggregate';
 import { WagerTransactionKind } from '../../domain/wager/wager-transaction-kind.enum';
-import { Money } from '../../domain/wallet/money.value-object';
+import { Money } from '../../domain/value-objects/money.value-object';
 
 describe('GetWagerTransactionByIdUseCase', () => {
   it('should return a wager transaction when found by id', async () => {

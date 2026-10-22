@@ -2,7 +2,7 @@ import { InvalidStateTransitionError } from "../errors/invalid-state-transition.
 import { MissingTransactionReferenceError } from "../errors/missing-transaction-reference.error";
 import { TransactionReferenceRequiredError } from "../errors/transaction-reference-required.error";
 import { UnexpectedTransactionReferenceError } from "../errors/unexpected-transaction-reference.error";
-import { Money } from "../wallet/money.value-object";
+import { Money } from "../value-objects/money.value-object";
 import { WagerTransactionKind } from "./wager-transaction-kind.enum";
 import { WagerTransactionStatus } from "./wager-transaction-status.enum";
 

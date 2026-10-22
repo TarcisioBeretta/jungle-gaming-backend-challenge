@@ -1,6 +1,6 @@
 import { describe, expect, it } from 'bun:test';
 import { Wallet } from './wallet.aggregate';
-import { Money } from './money.value-object';
+import { Money } from '../value-objects/money.value-object';
 import { InsufficientBalanceError } from '../errors/insufficient-balance.error';
 
 describe('Wallet Aggregate', () => {

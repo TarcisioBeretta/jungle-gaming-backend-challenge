@@ -2,7 +2,7 @@ import { describe, expect, it, mock } from 'bun:test';
 import { TransactionNotFoundError } from 'src/domain/errors/transaction-not-found-error';
 import { WagerTransactionKind } from 'src/domain/wager/wager-transaction-kind.enum';
 import { WagerTransaction } from 'src/domain/wager/wager-transaction.aggregate';
-import { Money } from 'src/domain/wallet/money.value-object';
+import { Money } from 'src/domain/value-objects/money.value-object';
 import { WagerTransactionRepository } from '../ports/wager-transaction.repository';
 import { GetTransactionByExternalIdUseCase } from './get-transaction-by-external-id.use-case';
 

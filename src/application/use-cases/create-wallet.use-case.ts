@@ -1,5 +1,5 @@
 import { Wallet } from '../../domain/wallet/wallet.aggregate';
-import { Money } from '../../domain/wallet/money.value-object';
+import { Money } from '../../domain/value-objects/money.value-object';
 import { WagerTransaction } from '../../domain/wager/wager-transaction.aggregate';
 import { WagerTransactionKind } from '../../domain/wager/wager-transaction-kind.enum';
 import { WalletRepository } from '../ports/wallet.repository';

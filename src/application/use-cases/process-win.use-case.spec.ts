@@ -7,7 +7,7 @@ import { Wallet } from '../../domain/wallet/wallet.aggregate';
 import { WagerTransaction } from '../../domain/wager/wager-transaction.aggregate';
 import { WagerTransactionKind } from '../../domain/wager/wager-transaction-kind.enum';
 import { WagerTransactionStatus } from '../../domain/wager/wager-transaction-status.enum';
-import { Money } from '../../domain/wallet/money.value-object';
+import { Money } from '../../domain/value-objects/money.value-object';
 import { WalletNotFoundError } from '../../domain/errors/wallet-not-found.error';
 
 describe('ProcessWinUseCase', () => {

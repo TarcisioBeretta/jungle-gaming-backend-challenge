@@ -2,7 +2,7 @@ import { describe, expect, it } from 'bun:test';
 import { WagerTransaction } from './wager-transaction.aggregate';
 import { WagerTransactionKind } from './wager-transaction-kind.enum';
 import { WagerTransactionStatus } from './wager-transaction-status.enum';
-import { Money } from '../wallet/money.value-object';
+import { Money } from '../value-objects/money.value-object';
 import { InvalidStateTransitionError } from '../errors/invalid-state-transition.error';
 import { TransactionReferenceRequiredError } from '../errors/transaction-reference-required.error';
 import { UnexpectedTransactionReferenceError } from '../errors/unexpected-transaction-reference.error';

@@ -1,4 +1,4 @@
-import { Money } from './money.value-object';
+import { Money } from '../value-objects/money.value-object';
 import { InsufficientBalanceError } from '../errors/insufficient-balance.error';
 
 export interface CreateWalletProps {
