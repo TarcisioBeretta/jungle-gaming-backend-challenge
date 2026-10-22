@@ -2,26 +2,31 @@ import { describe, expect, it, mock } from 'bun:test';
 import { ProcessRefundUseCase } from './process-refund.use-case';
 import { WagerTransactionRepository } from '../ports/wager-transaction.repository';
 import { WalletRepository } from '../ports/wallet.repository';
+import { WalletLedgerRepository } from '../ports/wallet-ledger.repository';
 import { UnitOfWork } from '../ports/unit-of-work.interface';
 import { Wallet } from '../../domain/wallet/wallet.aggregate';
 import { WagerTransaction } from '../../domain/wager/wager-transaction.aggregate';
 import { WagerTransactionKind } from '../../domain/wager/wager-transaction-kind.enum';
 import { WagerTransactionStatus } from '../../domain/wager/wager-transaction-status.enum';
+import { WalletLedgerEntry } from '../../domain/ledger/wallet-ledger-entry.entity';
+import { WalletLedgerEntryKind } from '../../domain/ledger/wallet-ledger-entry-kind.enum';
 import { Money } from '../../domain/value-objects/money.value-object';
 import { WalletNotFoundError } from '../../domain/errors/wallet-not-found.error';
 
 describe('ProcessRefundUseCase', () => {
-  it('should successfully process a refund, credit the wallet, mark transaction as processed with reference and commit', async () => {
+  it('should successfully process a refund, credit the wallet, create CREDIT ledger entry, mark transaction as processed with reference and commit', async () => {
     const initialBalance = Money.from({ amount: '70.00', currency: 'BRL' });
     const wallet = Wallet.restore('wallet-1', 'player-1', initialBalance);
 
     let commitCalled = false;
     let addedTransaction: WagerTransaction | null = null;
+    let addedLedgerEntry: WalletLedgerEntry | null = null;
     let updatedWallet: Wallet | null = null;
 
     const mockWagerTransactionRepository: WagerTransactionRepository = {
       findById: mock(async () => null),
       findByIdempotencyKey: mock(async () => null),
+      findByProviderAndExternalId: mock(async () => null),
       add: mock(async (tx: WagerTransaction) => {
         addedTransaction = tx;
       }),
@@ -36,6 +41,14 @@ describe('ProcessRefundUseCase', () => {
       add: mock(async () => {}),
     };
 
+    const mockWalletLedgerRepository: WalletLedgerRepository = {
+      add: mock(async (entry: WalletLedgerEntry) => {
+        addedLedgerEntry = entry;
+      }),
+      findByWalletIdPaginated: mock(async () => []),
+      findAllByWalletId: mock(async () => []),
+    };
+
     const mockUnitOfWork: UnitOfWork = {
       commit: mock(async () => {
         commitCalled = true;
@@ -45,6 +58,7 @@ describe('ProcessRefundUseCase', () => {
     const useCase = new ProcessRefundUseCase(
       mockWagerTransactionRepository,
       mockWalletRepository,
+      mockWalletLedgerRepository,
       mockUnitOfWork,
     );
 
@@ -68,6 +82,9 @@ describe('ProcessRefundUseCase', () => {
     expect(result.referenceExternalTransactionId).toBe('ext-bet-1');
     expect(result.processedAt).toBeDefined();
     expect(addedTransaction).not.toBeNull();
+    expect(addedLedgerEntry).not.toBeNull();
+    expect(addedLedgerEntry?.kind).toBe(WalletLedgerEntryKind.CREDIT);
+    expect(addedLedgerEntry?.money.toString()).toBe('30.00');
     expect(updatedWallet?.currentBalance.toString()).toBe('100.00');
     expect(commitCalled).toBe(true);
   });
@@ -95,6 +112,7 @@ describe('ProcessRefundUseCase', () => {
     const mockWagerTransactionRepository: WagerTransactionRepository = {
       findById: mock(async () => null),
       findByIdempotencyKey: mock(async () => existingTransaction),
+      findByProviderAndExternalId: mock(async () => null),
       add: mock(async () => {}),
       update: mock(async () => {}),
     };
@@ -108,6 +126,12 @@ describe('ProcessRefundUseCase', () => {
       add: mock(async () => {}),
     };
 
+    const mockWalletLedgerRepository: WalletLedgerRepository = {
+      add: mock(async () => {}),
+      findByWalletIdPaginated: mock(async () => []),
+      findAllByWalletId: mock(async () => []),
+    };
+
     const mockUnitOfWork: UnitOfWork = {
       commit: mock(async () => {
         commitCalled = true;
@@ -117,6 +141,7 @@ describe('ProcessRefundUseCase', () => {
     const useCase = new ProcessRefundUseCase(
       mockWagerTransactionRepository,
       mockWalletRepository,
+      mockWalletLedgerRepository,
       mockUnitOfWork,
     );
 
@@ -143,6 +168,7 @@ describe('ProcessRefundUseCase', () => {
     const mockWagerTransactionRepository: WagerTransactionRepository = {
       findById: mock(async () => null),
       findByIdempotencyKey: mock(async () => null),
+      findByProviderAndExternalId: mock(async () => null),
       add: mock(async () => {}),
       update: mock(async () => {}),
     };
@@ -153,6 +179,12 @@ describe('ProcessRefundUseCase', () => {
       add: mock(async () => {}),
     };
 
+    const mockWalletLedgerRepository: WalletLedgerRepository = {
+      add: mock(async () => {}),
+      findByWalletIdPaginated: mock(async () => []),
+      findAllByWalletId: mock(async () => []),
+    };
+
     const mockUnitOfWork: UnitOfWork = {
       commit: mock(async () => {}),
     };
@@ -160,6 +192,7 @@ describe('ProcessRefundUseCase', () => {
     const useCase = new ProcessRefundUseCase(
       mockWagerTransactionRepository,
       mockWalletRepository,
+      mockWalletLedgerRepository,
       mockUnitOfWork,
     );
 
