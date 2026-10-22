@@ -11,6 +11,7 @@ describe('CreateWalletUseCase', () => {
 
     const mockWalletRepository: WalletRepository = {
       findById: mock(async () => null),
+      update: mock(async () => {}),
       add: mock(async (wallet: Wallet) => {
         trackedWallets.push(wallet);
       }),
@@ -25,14 +26,14 @@ describe('CreateWalletUseCase', () => {
     const useCase = new CreateWalletUseCase(mockWalletRepository, mockUnitOfWork);
 
     await useCase.execute({
-      id: 'wallet-123',
-      userId: 'user-456',
+      playerId: 'player-456',
       currency: 'BRL',
     });
 
     expect(trackedWallets.length).toBe(1);
-    expect(trackedWallets[0].id).toBe('wallet-123');
-    expect(trackedWallets[0].userId).toBe('user-456');
+    expect(trackedWallets[0].id).toBeDefined();
+    expect(typeof trackedWallets[0].id).toBe('string');
+    expect(trackedWallets[0].playerId).toBe('player-456');
     expect(trackedWallets[0].currentBalance.amount).toBe('0.00');
     expect(trackedWallets[0].currentBalance.currency).toBe('BRL');
     expect(commitCalled).toBe(true);

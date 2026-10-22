@@ -2,25 +2,25 @@ import { Money } from './money.value-object';
 import { InsufficientBalanceError } from '../errors/insufficient-balance.error';
 
 export interface CreateWalletProps {
-  id: string;
-  userId: string;
+  playerId: string;
   currency: string;
 }
 
 export class Wallet {
   private constructor(
     public readonly id: string,
-    public readonly userId: string,
+    public readonly playerId: string,
     private balance: Money,
   ) {}
 
   public static create(props: CreateWalletProps): Wallet {
+    const id = crypto.randomUUID();
     const initialBalance = Money.from({ amount: '0.00', currency: props.currency });
-    return new Wallet(props.id, props.userId, initialBalance);
+    return new Wallet(id, props.playerId, initialBalance);
   }
 
-  public static restore(id: string, userId: string, balance: Money): Wallet {
-    return new Wallet(id, userId, balance);
+  public static restore(id: string, playerId: string, balance: Money): Wallet {
+    return new Wallet(id, playerId, balance);
   }
 
   public credit(amount: Money): void {

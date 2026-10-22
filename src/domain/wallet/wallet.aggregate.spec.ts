@@ -2,36 +2,34 @@ import { describe, expect, it } from 'bun:test';
 import { Wallet } from './wallet.aggregate';
 import { Money } from './money.value-object';
 import { InsufficientBalanceError } from '../errors/insufficient-balance.error';
-import { CurrencyMismatchError } from '../errors/currency-mismatch.error';
 
 describe('Wallet Aggregate', () => {
-  it('should create a wallet with zero balance', () => {
+  it('should create a wallet with zero balance and domain-generated id', () => {
     const wallet = Wallet.create({
-      id: 'wallet-123',
-      userId: 'user-456',
+      playerId: 'player-456',
       currency: 'BRL',
     });
 
-    expect(wallet.id).toBe('wallet-123');
-    expect(wallet.userId).toBe('user-456');
+    expect(wallet.id).toBeDefined();
+    expect(typeof wallet.id).toBe('string');
+    expect(wallet.playerId).toBe('player-456');
     expect(wallet.currentBalance.amount).toBe('0.00');
     expect(wallet.currentBalance.currency).toBe('BRL');
   });
 
-  it('should restore a wallet with an existing balance', () => {
+  it('should restore a wallet with an existing id and balance', () => {
     const balance = Money.from({ amount: '150.00', currency: 'USD' });
-    const wallet = Wallet.restore('wallet-123', 'user-456', balance);
+    const wallet = Wallet.restore('wallet-123', 'player-456', balance);
 
     expect(wallet.id).toBe('wallet-123');
-    expect(wallet.userId).toBe('user-456');
+    expect(wallet.playerId).toBe('player-456');
     expect(wallet.currentBalance.amount).toBe('150.00');
     expect(wallet.currentBalance.currency).toBe('USD');
   });
 
   it('should credit wallet balance correctly', () => {
     const wallet = Wallet.create({
-      id: 'wallet-123',
-      userId: 'user-456',
+      playerId: 'player-456',
       currency: 'BRL',
     });
 
@@ -44,7 +42,7 @@ describe('Wallet Aggregate', () => {
   it('should debit wallet balance correctly when balance is sufficient', () => {
     const wallet = Wallet.restore(
       'wallet-123',
-      'user-456',
+      'player-456',
       Money.from({ amount: '200.00', currency: 'BRL' }),
     );
 
@@ -56,7 +54,7 @@ describe('Wallet Aggregate', () => {
   it('should throw InsufficientBalanceError when balance is insufficient for debit', () => {
     const wallet = Wallet.restore(
       'wallet-123',
-      'user-456',
+      'player-456',
       Money.from({ amount: '50.00', currency: 'BRL' }),
     );
 

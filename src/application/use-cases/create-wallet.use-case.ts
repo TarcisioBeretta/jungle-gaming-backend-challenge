@@ -3,8 +3,7 @@ import { WalletRepository } from '../ports/wallet.repository';
 import { UnitOfWork } from '../ports/unit-of-work.interface';
 
 export interface CreateWalletCommand {
-  id: string;
-  userId: string;
+  playerId: string;
   currency: string;
 }
 
@@ -16,8 +15,7 @@ export class CreateWalletUseCase {
 
   public async execute(command: CreateWalletCommand): Promise<void> {
     const wallet = Wallet.create({
-      id: command.id,
-      userId: command.userId,
+      playerId: command.playerId,
       currency: command.currency,
     });
 
