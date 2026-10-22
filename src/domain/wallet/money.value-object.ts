@@ -1,7 +1,7 @@
-import Decimal from 'decimal.js';
-import { InvalidMoneyAmountError } from '../errors/invalid-money-amount.error';
-import { CurrencyMismatchError } from '../errors/currency-mismatch.error';
-import { NegativeMoneyError } from '../errors/negative-money.error';
+import Decimal from "decimal.js";
+import { InvalidMoneyAmountError } from "../errors/invalid-money-amount.error";
+import { CurrencyMismatchError } from "../errors/currency-mismatch.error";
+import { NegativeMoneyError } from "../errors/negative-money.error";
 
 export interface MoneyProps {
   amount: string;
@@ -34,6 +34,10 @@ export class Money {
     return new Money(parsed, props.currency);
   }
 
+  public static zero(currency: string): Money {
+    return new Money(new Decimal("0.00"), currency);
+  }
+
   public add(other: Money): Money {
     if (this.currency !== other.currency) {
       throw new CurrencyMismatchError(this.currency, other.currency);
@@ -61,6 +65,10 @@ export class Money {
       throw new CurrencyMismatchError(this.currency, other.currency);
     }
     return this.value.lessThan(other.value);
+  }
+
+  public isZero(): boolean {
+    return this.value.isZero();
   }
 
   public toString(): string {

@@ -15,7 +15,7 @@ export class Wallet {
 
   public static create(props: CreateWalletProps): Wallet {
     const id = crypto.randomUUID();
-    const initialBalance = Money.from({ amount: '0.00', currency: props.currency });
+    const initialBalance = Money.zero(props.currency);
     return new Wallet(id, props.playerId, initialBalance);
   }
 
