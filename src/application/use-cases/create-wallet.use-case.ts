@@ -1,13 +1,14 @@
-import { Wallet } from '../../domain/wallet/wallet.aggregate';
-import { Money } from '../../domain/value-objects/money.value-object';
-import { WagerTransaction } from '../../domain/wager/wager-transaction.aggregate';
-import { WagerTransactionKind } from '../../domain/wager/wager-transaction-kind.enum';
-import { WalletRepository } from '../ports/wallet.repository';
-import { WagerTransactionRepository } from '../ports/wager-transaction.repository';
-import { WalletLedgerRepository } from '../ports/wallet-ledger.repository';
-import { UnitOfWork } from '../ports/unit-of-work.interface';
-import { WalletLedgerEntry } from '../../domain/ledger/wallet-ledger-entry.entity';
-import { WalletLedgerEntryKind } from '../../domain/ledger/wallet-ledger-entry-kind.enum';
+import { Inject, Injectable } from "@nestjs/common";
+import { Wallet } from "../../domain/wallet/wallet.aggregate";
+import { Money } from "../../domain/value-objects/money.value-object";
+import { WagerTransaction } from "../../domain/wager/wager-transaction.aggregate";
+import { WagerTransactionKind } from "../../domain/wager/wager-transaction-kind.enum";
+import type { WalletRepository } from "../ports/wallet.repository";
+import type { WagerTransactionRepository } from "../ports/wager-transaction.repository";
+import type { WalletLedgerRepository } from "../ports/wallet-ledger.repository";
+import type { UnitOfWork } from "../ports/unit-of-work.interface";
+import { WalletLedgerEntry } from "../../domain/ledger/wallet-ledger-entry.entity";
+import { WalletLedgerEntryKind } from "../../domain/ledger/wallet-ledger-entry-kind.enum";
 
 export interface CreateWalletCommand {
   playerId: string;
@@ -18,12 +19,16 @@ export interface CreateWalletCommand {
   };
 }
 
+@Injectable()
 export class CreateWalletUseCase {
   constructor(
+    @Inject("WalletRepository")
     private readonly walletRepository: WalletRepository,
+    @Inject("WagerTransactionRepository")
     private readonly wagerTransactionRepository: WagerTransactionRepository,
+    @Inject("WalletLedgerRepository")
     private readonly walletLedgerRepository: WalletLedgerRepository,
-    private readonly unitOfWork: UnitOfWork,
+    @Inject("UnitOfWork") private readonly unitOfWork: UnitOfWork,
   ) {}
 
   public async execute(command: CreateWalletCommand): Promise<Wallet> {
@@ -41,14 +46,14 @@ export class CreateWalletUseCase {
         const balanceAfter = wallet.balance;
 
         const openingTransaction = WagerTransaction.create({
-          providerId: 'system',
+          providerId: "system",
           externalTransactionId: `opening-${wallet.id}`,
           idempotencyKey: `system:opening:${wallet.id}`,
-          payloadHash: 'system-opening',
+          payloadHash: "system-opening",
           walletId: wallet.id,
           playerId: wallet.playerId,
           roundId: `opening-round-${wallet.id}`,
-          gameId: 'system-wallet-creation',
+          gameId: "system-wallet-creation",
           kind: WagerTransactionKind.Opening,
           money: initialMoney,
         });

@@ -3,7 +3,7 @@ import { TransactionNotFoundError } from 'src/domain/errors/transaction-not-foun
 import { WagerTransactionKind } from 'src/domain/wager/wager-transaction-kind.enum';
 import { WagerTransaction } from 'src/domain/wager/wager-transaction.aggregate';
 import { Money } from 'src/domain/value-objects/money.value-object';
-import { WagerTransactionRepository } from '../ports/wager-transaction.repository';
+import type { WagerTransactionRepository } from '../ports/wager-transaction.repository';
 import { GetTransactionByExternalIdUseCase } from './get-transaction-by-external-id.use-case';
 
 describe('GetTransactionByExternalIdUseCase', () => {

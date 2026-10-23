@@ -1,12 +1,12 @@
 import { describe, expect, it, mock } from 'bun:test';
 import { CreateWalletUseCase } from './create-wallet.use-case';
-import { WalletRepository } from '../ports/wallet.repository';
-import { WagerTransactionRepository } from '../ports/wager-transaction.repository';
-import { UnitOfWork } from '../ports/unit-of-work.interface';
+import type { WalletRepository } from '../ports/wallet.repository';
+import type { WagerTransactionRepository } from '../ports/wager-transaction.repository';
+import type { UnitOfWork } from '../ports/unit-of-work.interface';
 import { Wallet } from '../../domain/wallet/wallet.aggregate';
 import { WagerTransaction } from '../../domain/wager/wager-transaction.aggregate';
 import { WagerTransactionKind } from '../../domain/wager/wager-transaction-kind.enum';
-import { WalletLedgerRepository } from '../ports/wallet-ledger.repository';
+import type { WalletLedgerRepository } from '../ports/wallet-ledger.repository';
 
 describe('CreateWalletUseCase', () => {
   it('should successfully create a wallet with zero balance, add it to repository and commit transaction without opening transaction', async () => {

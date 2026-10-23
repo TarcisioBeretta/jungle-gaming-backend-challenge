@@ -1,6 +1,6 @@
 import { describe, expect, it, mock } from 'bun:test';
 import { GetWagerTransactionByIdUseCase } from './get-wager-transaction-by-id.use-case';
-import { WagerTransactionRepository } from '../ports/wager-transaction.repository';
+import type { WagerTransactionRepository } from '../ports/wager-transaction.repository';
 import { WagerTransaction } from '../../domain/wager/wager-transaction.aggregate';
 import { WagerTransactionKind } from '../../domain/wager/wager-transaction-kind.enum';
 import { Money } from '../../domain/value-objects/money.value-object';
@@ -31,7 +31,7 @@ describe('GetWagerTransactionByIdUseCase', () => {
     const useCase = new GetWagerTransactionByIdUseCase(mockRepository);
 
     const result = await useCase.execute({
-      id: transaction.id,
+      transactionId: transaction.id,
     });
 
     expect(result).toBe(transaction);
@@ -48,11 +48,12 @@ describe('GetWagerTransactionByIdUseCase', () => {
 
     const useCase = new GetWagerTransactionByIdUseCase(mockRepository);
 
-    const result = await useCase.execute({
-      id: 'non-existent-id',
-    });
+    await expect(
+      useCase.execute({
+        transactionId: 'non-existent-id',
+      }),
+    ).rejects.toThrow('Wager transaction with ID "non-existent-id" was not found.');
 
-    expect(result).toBeNull();
     expect(mockRepository.findById).toHaveBeenCalledWith('non-existent-id');
   });
 });

@@ -1,8 +1,10 @@
-import { EntityManager } from '@mikro-orm/core';
-import { WalletLedgerRepository } from '../../../application/ports/wallet-ledger.repository';
-import { WalletLedgerEntry } from '../../../domain/ledger/wallet-ledger-entry.entity';
-import { WalletLedgerEntryEntity } from '../entities/wallet-ledger-entry.entity';
+import { EntityManager } from "@mikro-orm/core";
+import { Injectable } from "@nestjs/common";
+import type { WalletLedgerRepository } from "../../../application/ports/wallet-ledger.repository";
+import { WalletLedgerEntry } from "../../../domain/ledger/wallet-ledger-entry.entity";
+import { WalletLedgerEntryEntity } from "../entities/wallet-ledger-entry.entity";
 
+@Injectable()
 export class MikroOrmWalletLedgerRepository implements WalletLedgerRepository {
   constructor(private readonly em: EntityManager) {}
 
@@ -22,7 +24,7 @@ export class MikroOrmWalletLedgerRepository implements WalletLedgerRepository {
     };
 
     const entities = await this.em.find(WalletLedgerEntryEntity, query, {
-      orderBy: { createdAt: 'DESC' },
+      orderBy: { createdAt: "DESC" },
       limit,
     });
 
@@ -33,7 +35,7 @@ export class MikroOrmWalletLedgerRepository implements WalletLedgerRepository {
     const entities = await this.em.find(
       WalletLedgerEntryEntity,
       { walletId },
-      { orderBy: { createdAt: 'DESC' } },
+      { orderBy: { createdAt: "DESC" } },
     );
 
     return entities.map((entity) => entity.toDomain());

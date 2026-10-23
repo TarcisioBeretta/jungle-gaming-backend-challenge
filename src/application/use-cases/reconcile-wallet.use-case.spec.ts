@@ -1,7 +1,7 @@
 import { describe, expect, it, mock } from 'bun:test';
 import { ReconcileWalletUseCase } from './reconcile-wallet.use-case';
-import { WalletRepository } from '../ports/wallet.repository';
-import { WalletLedgerRepository } from '../ports/wallet-ledger.repository';
+import type { WalletRepository } from '../ports/wallet.repository';
+import type { WalletLedgerRepository } from '../ports/wallet-ledger.repository';
 import { Wallet } from '../../domain/wallet/wallet.aggregate';
 import { Money } from '../../domain/value-objects/money.value-object';
 import { WalletLedgerEntry } from '../../domain/ledger/wallet-ledger-entry.entity';

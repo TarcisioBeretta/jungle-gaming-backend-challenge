@@ -1,8 +1,10 @@
-import { EntityManager } from '@mikro-orm/core';
-import { InboxRepository } from '../../../application/ports/inbox.repository';
-import { InboxMessage } from '../../../domain/inbox/inbox-message.entity';
-import { InboxMessageEntity } from '../entities/inbox-message.entity';
+import { EntityManager } from "@mikro-orm/core";
+import { Injectable } from "@nestjs/common";
+import type { InboxRepository } from "../../../application/ports/inbox.repository";
+import { InboxMessage } from "../../../domain/inbox/inbox-message.entity";
+import { InboxMessageEntity } from "../entities/inbox-message.entity";
 
+@Injectable()
 export class MikroOrmInboxRepository implements InboxRepository {
   constructor(private readonly em: EntityManager) {}
 
@@ -24,7 +26,9 @@ export class MikroOrmInboxRepository implements InboxRepository {
   }
 
   async update(message: InboxMessage): Promise<void> {
-    const existing = await this.em.findOne(InboxMessageEntity, { id: message.id });
+    const existing = await this.em.findOne(InboxMessageEntity, {
+      id: message.id,
+    });
 
     if (!existing) {
       return;

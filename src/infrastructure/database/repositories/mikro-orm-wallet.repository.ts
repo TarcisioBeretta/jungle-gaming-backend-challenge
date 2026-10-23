@@ -1,9 +1,11 @@
-import { EntityManager } from '@mikro-orm/core';
-import { WalletRepository } from '../../../application/ports/wallet.repository';
-import { WalletNotFoundError } from '../../../domain/errors/wallet-not-found.error';
-import { Wallet } from '../../../domain/wallet/wallet.aggregate';
-import { WalletEntity } from '../entities/wallet.entity';
+import { EntityManager } from "@mikro-orm/core";
+import { Injectable } from "@nestjs/common";
+import type { WalletRepository } from "../../../application/ports/wallet.repository";
+import { WalletNotFoundError } from "../../../domain/errors/wallet-not-found.error";
+import { Wallet } from "../../../domain/wallet/wallet.aggregate";
+import { WalletEntity } from "../entities/wallet.entity";
 
+@Injectable()
 export class MikroOrmWalletRepository implements WalletRepository {
   constructor(private readonly em: EntityManager) {}
 

@@ -1,9 +1,9 @@
 import { describe, expect, it, mock } from 'bun:test';
 import { ProcessRefundUseCase } from './process-refund.use-case';
-import { WagerTransactionRepository } from '../ports/wager-transaction.repository';
-import { WalletRepository } from '../ports/wallet.repository';
-import { WalletLedgerRepository } from '../ports/wallet-ledger.repository';
-import { UnitOfWork } from '../ports/unit-of-work.interface';
+import type { WagerTransactionRepository } from '../ports/wager-transaction.repository';
+import type { WalletRepository } from '../ports/wallet.repository';
+import type { WalletLedgerRepository } from '../ports/wallet-ledger.repository';
+import type { UnitOfWork } from '../ports/unit-of-work.interface';
 import { Wallet } from '../../domain/wallet/wallet.aggregate';
 import { WagerTransaction } from '../../domain/wager/wager-transaction.aggregate';
 import { WagerTransactionKind } from '../../domain/wager/wager-transaction-kind.enum';
@@ -12,7 +12,7 @@ import { WalletLedgerEntry } from '../../domain/ledger/wallet-ledger-entry.entit
 import { WalletLedgerEntryKind } from '../../domain/ledger/wallet-ledger-entry-kind.enum';
 import { Money } from '../../domain/value-objects/money.value-object';
 import { WalletNotFoundError } from '../../domain/errors/wallet-not-found.error';
-import { WagerTransactionIdempotencyServicePort } from '../ports/wager-transaction-idempotency.service';
+import type { WagerTransactionIdempotencyServicePort } from '../ports/wager-transaction-idempotency.service';
 
 describe('ProcessRefundUseCase', () => {
   it('should successfully process a refund, credit the wallet, create CREDIT ledger entry, mark transaction as processed with reference and commit', async () => {

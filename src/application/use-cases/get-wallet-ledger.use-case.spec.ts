@@ -1,6 +1,6 @@
 import { describe, expect, it, mock } from 'bun:test';
 import { GetWalletLedgerUseCase } from './get-wallet-ledger.use-case';
-import { WalletLedgerRepository } from '../ports/wallet-ledger.repository';
+import type { WalletLedgerRepository } from '../ports/wallet-ledger.repository';
 import { WalletLedgerEntry } from '../../domain/ledger/wallet-ledger-entry.entity';
 import { Money } from '../../domain/value-objects/money.value-object';
 import { WalletLedgerEntryKind } from '../../domain/ledger/wallet-ledger-entry-kind.enum';

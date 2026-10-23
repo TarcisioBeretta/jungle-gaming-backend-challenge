@@ -1,14 +1,15 @@
-import { WagerTransactionRepository } from '../ports/wager-transaction.repository';
-import { WalletRepository } from '../ports/wallet.repository';
-import { WalletLedgerRepository } from '../ports/wallet-ledger.repository';
-import { UnitOfWork } from '../ports/unit-of-work.interface';
-import { WagerTransactionIdempotencyServicePort } from '../ports/wager-transaction-idempotency.service';
-import { WagerTransaction } from '../../domain/wager/wager-transaction.aggregate';
-import { WagerTransactionKind } from '../../domain/wager/wager-transaction-kind.enum';
-import { WalletLedgerEntry } from '../../domain/ledger/wallet-ledger-entry.entity';
-import { WalletLedgerEntryKind } from '../../domain/ledger/wallet-ledger-entry-kind.enum';
-import { Money } from '../../domain/value-objects/money.value-object';
-import { WalletNotFoundError } from '../../domain/errors/wallet-not-found.error';
+import { Inject, Injectable } from "@nestjs/common";
+import type { WagerTransactionRepository } from "../ports/wager-transaction.repository";
+import type { WalletRepository } from "../ports/wallet.repository";
+import type { WalletLedgerRepository } from "../ports/wallet-ledger.repository";
+import type { UnitOfWork } from "../ports/unit-of-work.interface";
+import type { WagerTransactionIdempotencyServicePort } from "../ports/wager-transaction-idempotency.service";
+import { WagerTransaction } from "../../domain/wager/wager-transaction.aggregate";
+import { WagerTransactionKind } from "../../domain/wager/wager-transaction-kind.enum";
+import { WalletLedgerEntry } from "../../domain/ledger/wallet-ledger-entry.entity";
+import { WalletLedgerEntryKind } from "../../domain/ledger/wallet-ledger-entry-kind.enum";
+import { Money } from "../../domain/value-objects/money.value-object";
+import { WalletNotFoundError } from "../../domain/errors/wallet-not-found.error";
 
 export interface ProcessWinCommand {
   providerId: string;
@@ -23,12 +24,18 @@ export interface ProcessWinCommand {
   currency: string;
 }
 
+@Injectable()
 export class ProcessWinUseCase {
   constructor(
+    @Inject("WagerTransactionRepository")
     private readonly wagerTransactionRepository: WagerTransactionRepository,
+    @Inject("WalletRepository")
     private readonly walletRepository: WalletRepository,
+    @Inject("WalletLedgerRepository")
     private readonly walletLedgerRepository: WalletLedgerRepository,
+    @Inject("UnitOfWork")
     private readonly unitOfWork: UnitOfWork,
+    @Inject("WagerTransactionIdempotencyServicePort")
     private readonly idempotencyService: WagerTransactionIdempotencyServicePort,
   ) {}
 

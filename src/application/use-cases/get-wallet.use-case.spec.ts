@@ -1,6 +1,6 @@
 import { describe, expect, it, mock } from 'bun:test';
 import { GetWalletUseCase } from './get-wallet.use-case';
-import { WalletRepository } from '../ports/wallet.repository';
+import type { WalletRepository } from '../ports/wallet.repository';
 import { Wallet } from '../../domain/wallet/wallet.aggregate';
 import { Money } from '../../domain/value-objects/money.value-object';
 import { WalletNotFoundError } from 'src/domain/errors/wallet-not-found.error';

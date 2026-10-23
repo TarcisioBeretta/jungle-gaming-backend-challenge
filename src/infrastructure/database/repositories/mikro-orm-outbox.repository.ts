@@ -1,8 +1,10 @@
-import { EntityManager } from '@mikro-orm/core';
-import { OutboxRepository } from '../../../application/ports/outbox.repository';
-import { OutboxMessage } from '../../../domain/outbox/outbox-message.entity';
-import { OutboxMessageEntity } from '../entities/outbox-message.entity';
+import { EntityManager } from "@mikro-orm/core";
+import { Injectable } from "@nestjs/common";
+import type { OutboxRepository } from "../../../application/ports/outbox.repository";
+import { OutboxMessage } from "../../../domain/outbox/outbox-message.entity";
+import { OutboxMessageEntity } from "../entities/outbox-message.entity";
 
+@Injectable()
 export class MikroOrmOutboxRepository implements OutboxRepository {
   constructor(private readonly em: EntityManager) {}
 
@@ -16,7 +18,7 @@ export class MikroOrmOutboxRepository implements OutboxRepository {
       OutboxMessageEntity,
       { publishedAt: null },
       {
-        orderBy: { occurredAt: 'ASC' },
+        orderBy: { occurredAt: "ASC" },
         limit,
       },
     );
@@ -25,7 +27,9 @@ export class MikroOrmOutboxRepository implements OutboxRepository {
   }
 
   async update(message: OutboxMessage): Promise<void> {
-    const existing = await this.em.findOne(OutboxMessageEntity, { id: message.id });
+    const existing = await this.em.findOne(OutboxMessageEntity, {
+      id: message.id,
+    });
 
     if (!existing) {
       return;

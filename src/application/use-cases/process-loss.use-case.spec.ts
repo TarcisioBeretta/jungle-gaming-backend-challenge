@@ -1,15 +1,15 @@
 import { describe, expect, it, mock } from 'bun:test';
 import { ProcessLossUseCase } from './process-loss.use-case';
-import { WagerTransactionRepository } from '../ports/wager-transaction.repository';
-import { WalletRepository } from '../ports/wallet.repository';
-import { UnitOfWork } from '../ports/unit-of-work.interface';
+import type { WagerTransactionRepository } from '../ports/wager-transaction.repository';
+import type { WalletRepository } from '../ports/wallet.repository';
+import type { UnitOfWork } from '../ports/unit-of-work.interface';
 import { Wallet } from '../../domain/wallet/wallet.aggregate';
 import { WagerTransaction } from '../../domain/wager/wager-transaction.aggregate';
 import { WagerTransactionKind } from '../../domain/wager/wager-transaction-kind.enum';
 import { WagerTransactionStatus } from '../../domain/wager/wager-transaction-status.enum';
 import { Money } from '../../domain/value-objects/money.value-object';
 import { WalletNotFoundError } from '../../domain/errors/wallet-not-found.error';
-import { WagerTransactionIdempotencyServicePort } from '../ports/wager-transaction-idempotency.service';
+import type { WagerTransactionIdempotencyServicePort } from '../ports/wager-transaction-idempotency.service';
 
 describe('ProcessLossUseCase', () => {
   it('should successfully process a loss, mark transaction as processed and commit without changing wallet balance', async () => {

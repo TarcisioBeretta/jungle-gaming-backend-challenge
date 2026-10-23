@@ -1,9 +1,11 @@
-import { EntityManager } from '@mikro-orm/core';
-import { WagerTransactionRepository } from '../../../application/ports/wager-transaction.repository';
-import { WagerTransactionNotFoundError } from '../../../domain/errors/wager-transaction-not-found.error';
-import { WagerTransaction } from '../../../domain/wager/wager-transaction.aggregate';
-import { WagerTransactionEntity } from '../entities/wager-transaction.entity';
+import { EntityManager } from "@mikro-orm/core";
+import { Injectable } from "@nestjs/common";
+import type { WagerTransactionRepository } from "../../../application/ports/wager-transaction.repository";
+import { WagerTransactionNotFoundError } from "../../../domain/errors/wager-transaction-not-found.error";
+import { WagerTransaction } from "../../../domain/wager/wager-transaction.aggregate";
+import { WagerTransactionEntity } from "../entities/wager-transaction.entity";
 
+@Injectable()
 export class MikroOrmWagerTransactionRepository implements WagerTransactionRepository {
   constructor(private readonly em: EntityManager) {}
 
@@ -12,8 +14,12 @@ export class MikroOrmWagerTransactionRepository implements WagerTransactionRepos
     return entity ? entity.toDomain() : null;
   }
 
-  async findByIdempotencyKey(idempotencyKey: string): Promise<WagerTransaction | null> {
-    const entity = await this.em.findOne(WagerTransactionEntity, { idempotencyKey });
+  async findByIdempotencyKey(
+    idempotencyKey: string,
+  ): Promise<WagerTransaction | null> {
+    const entity = await this.em.findOne(WagerTransactionEntity, {
+      idempotencyKey,
+    });
     return entity ? entity.toDomain() : null;
   }
 
@@ -35,7 +41,9 @@ export class MikroOrmWagerTransactionRepository implements WagerTransactionRepos
   }
 
   async update(transaction: WagerTransaction): Promise<void> {
-    const existing = await this.em.findOne(WagerTransactionEntity, { id: transaction.id });
+    const existing = await this.em.findOne(WagerTransactionEntity, {
+      id: transaction.id,
+    });
 
     if (!existing) {
       throw new WagerTransactionNotFoundError(transaction.id);

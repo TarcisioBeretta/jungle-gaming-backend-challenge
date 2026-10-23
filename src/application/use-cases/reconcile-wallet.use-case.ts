@@ -1,5 +1,6 @@
-import { WalletRepository } from "../ports/wallet.repository";
-import { WalletLedgerRepository } from "../ports/wallet-ledger.repository";
+import { Inject, Injectable } from "@nestjs/common";
+import type { WalletRepository } from "../ports/wallet.repository";
+import type { WalletLedgerRepository } from "../ports/wallet-ledger.repository";
 import { Money } from "../../domain/value-objects/money.value-object";
 import { WalletLedgerEntryKind } from "../../domain/ledger/wallet-ledger-entry-kind.enum";
 import { WalletNotFoundError } from "../../domain/errors/wallet-not-found.error";
@@ -17,9 +18,12 @@ export interface ReconcileWalletResult {
   checkedEntries: number;
 }
 
+@Injectable()
 export class ReconcileWalletUseCase {
   constructor(
+    @Inject("WalletRepository")
     private readonly walletRepository: WalletRepository,
+    @Inject("WalletLedgerRepository")
     private readonly ledgerRepository: WalletLedgerRepository,
   ) {}
 
