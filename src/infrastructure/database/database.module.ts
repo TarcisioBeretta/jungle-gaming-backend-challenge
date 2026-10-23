@@ -1,6 +1,5 @@
 import { MikroOrmModule } from '@mikro-orm/nestjs';
 import { Module } from '@nestjs/common';
-import { EntityManager } from '@mikro-orm/core';
 import { MikroOrmInboxRepository } from './repositories/mikro-orm-inbox.repository';
 import { MikroOrmOutboxRepository } from './repositories/mikro-orm-outbox.repository';
 import { MikroOrmUnitOfWork } from './mikro-orm-unit-of-work';
@@ -26,25 +25,20 @@ import ormConfig from './mikro-orm.config';
     ]),
   ],
   providers: [
-    MikroOrmWalletRepository,
-    MikroOrmWagerTransactionRepository,
-    MikroOrmWalletLedgerRepository,
-    MikroOrmInboxRepository,
-    MikroOrmOutboxRepository,
-    MikroOrmUnitOfWork,
-    {
-      provide: EntityManager,
-      useFactory: (em: EntityManager) => em,
-      inject: [EntityManager],
-    },
+    { provide: 'WalletRepository', useClass: MikroOrmWalletRepository },
+    { provide: 'WagerTransactionRepository', useClass: MikroOrmWagerTransactionRepository },
+    { provide: 'WalletLedgerRepository', useClass: MikroOrmWalletLedgerRepository },
+    { provide: 'InboxRepository', useClass: MikroOrmInboxRepository },
+    { provide: 'OutboxRepository', useClass: MikroOrmOutboxRepository },
+    { provide: 'UnitOfWork', useClass: MikroOrmUnitOfWork },
   ],
   exports: [
-    MikroOrmWalletRepository,
-    MikroOrmWagerTransactionRepository,
-    MikroOrmWalletLedgerRepository,
-    MikroOrmInboxRepository,
-    MikroOrmOutboxRepository,
-    MikroOrmUnitOfWork,
+    'WalletRepository',
+    'WagerTransactionRepository',
+    'WalletLedgerRepository',
+    'InboxRepository',
+    'OutboxRepository',
+    'UnitOfWork',
   ],
 })
 export class DatabaseModule {}
