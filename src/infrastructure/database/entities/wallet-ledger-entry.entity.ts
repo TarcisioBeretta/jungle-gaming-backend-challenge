@@ -1,4 +1,4 @@
-import { Entity, PrimaryKey, Property } from '@mikro-orm/core';
+import { Entity, PrimaryKey, Property } from '@mikro-orm/decorators/legacy';
 import { WalletLedgerEntry } from '../../../domain/ledger/wallet-ledger-entry.entity';
 import { WalletLedgerEntryKind } from '../../../domain/ledger/wallet-ledger-entry-kind.enum';
 import { Money } from '../../../domain/value-objects/money.value-object';

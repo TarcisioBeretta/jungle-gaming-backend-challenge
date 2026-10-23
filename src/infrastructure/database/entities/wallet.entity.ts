@@ -1,4 +1,5 @@
-import { Entity, PrimaryKey, Property } from '@mikro-orm/core';
+
+import { Entity, PrimaryKey, Property } from '@mikro-orm/decorators/legacy';
 import { Wallet } from '../../../domain/wallet/wallet.aggregate';
 import { Money } from '../../../domain/value-objects/money.value-object';
 

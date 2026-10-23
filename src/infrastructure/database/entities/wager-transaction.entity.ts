@@ -1,4 +1,4 @@
-import { Entity, PrimaryKey, Property } from '@mikro-orm/core';
+import { Entity, PrimaryKey, Property } from '@mikro-orm/decorators/legacy';
 import { WagerTransaction } from '../../../domain/wager/wager-transaction.aggregate';
 import { WagerTransactionKind } from '../../../domain/wager/wager-transaction-kind.enum';
 import { WagerTransactionStatus } from '../../../domain/wager/wager-transaction-status.enum';

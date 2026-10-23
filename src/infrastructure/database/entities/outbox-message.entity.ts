@@ -1,4 +1,4 @@
-import { Entity, PrimaryKey, Property } from '@mikro-orm/core';
+import { Entity, PrimaryKey, Property } from '@mikro-orm/decorators/legacy';
 import { OutboxMessage } from '../../../domain/outbox/outbox-message.entity';
 
 @Entity({ tableName: 'outbox_messages' })
