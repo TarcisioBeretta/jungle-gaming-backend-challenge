@@ -14,9 +14,17 @@ export class MikroOrmOutboxRepository implements OutboxRepository {
   }
 
   async findPending(limit = 20): Promise<OutboxMessage[]> {
+    const now = new Date();
+
     const entities = await this.em.find(
       OutboxMessageEntity,
-      { publishedAt: null },
+      {
+        publishedAt: null,
+        $or: [
+          { nextAttemptAt: { $lte: now } },
+          { nextAttemptAt: undefined },
+        ],
+      },
       {
         orderBy: { occurredAt: "ASC" },
         limit,
