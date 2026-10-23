@@ -1,4 +1,5 @@
 import { IsDateString, IsNumber, IsString } from 'class-validator';
+import { Wallet } from '../../../domain/wallet/wallet.aggregate';
 import { MoneyDto } from './money.dto';
 
 export class WalletResponseDto {
@@ -21,4 +22,19 @@ export class WalletResponseDto {
 
   @IsDateString()
   updatedAt!: string;
+
+  static fromDomain(wallet: Wallet): WalletResponseDto {
+    return {
+      id: wallet.id,
+      playerId: wallet.playerId,
+      currency: wallet.currency,
+      balance: {
+        amount: wallet.balance.toString(),
+        currency: wallet.balance.currency,
+      },
+      version: wallet.version,
+      createdAt: wallet.createdAt.toISOString(),
+      updatedAt: wallet.updatedAt.toISOString(),
+    };
+  }
 }

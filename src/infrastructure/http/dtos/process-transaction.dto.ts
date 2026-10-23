@@ -1,4 +1,6 @@
-import { IsOptional, IsString, IsUUID, Length, Matches } from 'class-validator';
+import { Type } from 'class-transformer';
+import { IsIn, IsOptional, IsString, IsUUID, ValidateNested } from 'class-validator';
+import { MoneyDto } from './money.dto';
 
 export class ProcessTransactionDto {
   @IsString()
@@ -6,12 +8,6 @@ export class ProcessTransactionDto {
 
   @IsString()
   externalTransactionId!: string;
-
-  @IsString()
-  idempotencyKey!: string;
-
-  @IsString()
-  payloadHash!: string;
 
   @IsString()
   @IsUUID()
@@ -28,14 +24,12 @@ export class ProcessTransactionDto {
   gameId!: string;
 
   @IsString()
-  @Matches(/^\d+(\.\d{1,2})?$/, {
-    message: 'amount must be a numeric string with up to 2 decimal places',
-  })
-  amount!: string;
+  @IsIn(['BET', 'WIN', 'LOSS', 'REFUND', 'ROLLBACK'])
+  kind!: string;
 
-  @IsString()
-  @Length(3, 3)
-  currency!: string;
+  @ValidateNested()
+  @Type(() => MoneyDto)
+  money!: MoneyDto;
 
   @IsOptional()
   @IsString()
