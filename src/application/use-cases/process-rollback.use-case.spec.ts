@@ -3,6 +3,7 @@ import { ProcessRollbackUseCase } from './process-rollback.use-case';
 import type { WagerTransactionRepository } from '../ports/wager-transaction.repository';
 import type { WalletRepository } from '../ports/wallet.repository';
 import type { WalletLedgerRepository } from '../ports/wallet-ledger.repository';
+import type { OutboxRepository } from '../ports/outbox.repository';
 import type { UnitOfWork } from '../ports/unit-of-work.interface';
 import { Wallet } from '../../domain/wallet/wallet.aggregate';
 import { WagerTransaction } from '../../domain/wager/wager-transaction.aggregate';
@@ -14,6 +15,7 @@ import { Money } from '../../domain/value-objects/money.value-object';
 import { WalletNotFoundError } from '../../domain/errors/wallet-not-found.error';
 import { OriginalTransactionNotFoundError } from '../../domain/errors/original-transaction-not-found.error';
 import type { WagerTransactionIdempotencyServicePort } from '../ports/wager-transaction-idempotency.service';
+import { OutboxMessage } from '../../domain/outbox/outbox-message.entity';
 
 describe('ProcessRollbackUseCase', () => {
   const baseCommand = {
@@ -51,6 +53,7 @@ describe('ProcessRollbackUseCase', () => {
     let addedTransaction: WagerTransaction | null = null;
     let addedLedgerEntry: WalletLedgerEntry | null = null;
     let updatedWallet: Wallet | null = null;
+    const addedOutboxMessages: OutboxMessage[] = [];
 
     const mockWagerTransactionRepository: WagerTransactionRepository = {
       findById: mock(async () => null),
@@ -78,6 +81,14 @@ describe('ProcessRollbackUseCase', () => {
       findAllByWalletId: mock(async () => []),
     };
 
+    const mockOutboxRepository: OutboxRepository = {
+      add: mock(async (msg: OutboxMessage) => {
+        addedOutboxMessages.push(msg);
+      }),
+      findPending: mock(async () => []),
+      update: mock(async () => {}),
+    };
+
     const mockUnitOfWork: UnitOfWork = {
       commit: mock(async () => {
         commitCalled = true;
@@ -92,6 +103,7 @@ describe('ProcessRollbackUseCase', () => {
       mockWagerTransactionRepository,
       mockWalletRepository,
       mockWalletLedgerRepository,
+      mockOutboxRepository,
       mockUnitOfWork,
       mockIdempotencyService,
     );
@@ -108,7 +120,8 @@ describe('ProcessRollbackUseCase', () => {
     expect(result.processedAt).toBeDefined();
     expect(addedTransaction).not.toBeNull();
     expect(addedLedgerEntry?.kind).toBe(WalletLedgerEntryKind.CREDIT);
-    expect(updatedWallet?.currentBalance.toString()).toBe('100.00');
+    expect(updatedWallet?.balance.toString()).toBe('100.00');
+    expect(addedOutboxMessages.length).toBe(2);
     expect(commitCalled).toBe(true);
   });
 
@@ -131,6 +144,7 @@ describe('ProcessRollbackUseCase', () => {
 
     let addedLedgerEntry: WalletLedgerEntry | null = null;
     let updatedWallet: Wallet | null = null;
+    const addedOutboxMessages: OutboxMessage[] = [];
 
     const mockWagerTransactionRepository: WagerTransactionRepository = {
       findById: mock(async () => null),
@@ -156,6 +170,14 @@ describe('ProcessRollbackUseCase', () => {
       findAllByWalletId: mock(async () => []),
     };
 
+    const mockOutboxRepository: OutboxRepository = {
+      add: mock(async (msg: OutboxMessage) => {
+        addedOutboxMessages.push(msg);
+      }),
+      findPending: mock(async () => []),
+      update: mock(async () => {}),
+    };
+
     const mockUnitOfWork: UnitOfWork = {
       commit: mock(async () => {}),
     };
@@ -168,6 +190,7 @@ describe('ProcessRollbackUseCase', () => {
       mockWagerTransactionRepository,
       mockWalletRepository,
       mockWalletLedgerRepository,
+      mockOutboxRepository,
       mockUnitOfWork,
       mockIdempotencyService,
     );
@@ -180,7 +203,8 @@ describe('ProcessRollbackUseCase', () => {
 
     expect(result.kind).toBe(WagerTransactionKind.Rollback);
     expect(addedLedgerEntry?.kind).toBe(WalletLedgerEntryKind.DEBIT);
-    expect(updatedWallet?.currentBalance.toString()).toBe('50.00');
+    expect(updatedWallet?.balance.toString()).toBe('50.00');
+    expect(addedOutboxMessages.length).toBe(2);
   });
 
   it('should successfully process a rollback for a Loss (no balance change, no ledger entry)', async () => {
@@ -202,6 +226,7 @@ describe('ProcessRollbackUseCase', () => {
 
     let ledgerAdded = false;
     let walletUpdated = false;
+    const addedOutboxMessages: OutboxMessage[] = [];
 
     const mockWagerTransactionRepository: WagerTransactionRepository = {
       findById: mock(async () => null),
@@ -227,6 +252,14 @@ describe('ProcessRollbackUseCase', () => {
       findAllByWalletId: mock(async () => []),
     };
 
+    const mockOutboxRepository: OutboxRepository = {
+      add: mock(async (msg: OutboxMessage) => {
+        addedOutboxMessages.push(msg);
+      }),
+      findPending: mock(async () => []),
+      update: mock(async () => {}),
+    };
+
     const mockUnitOfWork: UnitOfWork = {
       commit: mock(async () => {}),
     };
@@ -239,6 +272,7 @@ describe('ProcessRollbackUseCase', () => {
       mockWagerTransactionRepository,
       mockWalletRepository,
       mockWalletLedgerRepository,
+      mockOutboxRepository,
       mockUnitOfWork,
       mockIdempotencyService,
     );
@@ -251,7 +285,8 @@ describe('ProcessRollbackUseCase', () => {
     expect(result.kind).toBe(WagerTransactionKind.Rollback);
     expect(ledgerAdded).toBe(false);
     expect(walletUpdated).toBe(false);
-    expect(wallet.currentBalance.toString()).toBe('100.00');
+    expect(wallet.balance.toString()).toBe('100.00');
+    expect(addedOutboxMessages.length).toBe(1);
   });
 
   it('should return existing transaction if idempotency key already exists', async () => {
@@ -297,6 +332,12 @@ describe('ProcessRollbackUseCase', () => {
       findAllByWalletId: mock(async () => []),
     };
 
+    const mockOutboxRepository: OutboxRepository = {
+      add: mock(async () => {}),
+      findPending: mock(async () => []),
+      update: mock(async () => {}),
+    };
+
     const mockUnitOfWork: UnitOfWork = {
       commit: mock(async () => {
         commitCalled = true;
@@ -311,6 +352,7 @@ describe('ProcessRollbackUseCase', () => {
       mockWagerTransactionRepository,
       mockWalletRepository,
       mockWalletLedgerRepository,
+      mockOutboxRepository,
       mockUnitOfWork,
       mockIdempotencyService,
     );
@@ -343,6 +385,12 @@ describe('ProcessRollbackUseCase', () => {
       findAllByWalletId: mock(async () => []),
     };
 
+    const mockOutboxRepository: OutboxRepository = {
+      add: mock(async () => {}),
+      findPending: mock(async () => []),
+      update: mock(async () => {}),
+    };
+
     const mockUnitOfWork: UnitOfWork = {
       commit: mock(async () => {}),
     };
@@ -355,6 +403,7 @@ describe('ProcessRollbackUseCase', () => {
       mockWagerTransactionRepository,
       mockWalletRepository,
       mockWalletLedgerRepository,
+      mockOutboxRepository,
       mockUnitOfWork,
       mockIdempotencyService,
     );
@@ -368,7 +417,7 @@ describe('ProcessRollbackUseCase', () => {
     const mockWagerTransactionRepository: WagerTransactionRepository = {
       findById: mock(async () => null),
       findByIdempotencyKey: mock(async () => null),
-      findByProviderAndExternalId: mock(async () => null), // Retorna null (não encontrada)
+      findByProviderAndExternalId: mock(async () => null),
       add: mock(async () => {}),
       update: mock(async () => {}),
     };
@@ -385,6 +434,12 @@ describe('ProcessRollbackUseCase', () => {
       findAllByWalletId: mock(async () => []),
     };
 
+    const mockOutboxRepository: OutboxRepository = {
+      add: mock(async () => {}),
+      findPending: mock(async () => []),
+      update: mock(async () => {}),
+    };
+
     const mockUnitOfWork: UnitOfWork = {
       commit: mock(async () => {}),
     };
@@ -397,6 +452,7 @@ describe('ProcessRollbackUseCase', () => {
       mockWagerTransactionRepository,
       mockWalletRepository,
       mockWalletLedgerRepository,
+      mockOutboxRepository,
       mockUnitOfWork,
       mockIdempotencyService,
     );

@@ -3,6 +3,7 @@ import { ProcessBetUseCase } from './process-bet.use-case';
 import type { WagerTransactionRepository } from '../ports/wager-transaction.repository';
 import type { WalletRepository } from '../ports/wallet.repository';
 import type { WalletLedgerRepository } from '../ports/wallet-ledger.repository';
+import type { OutboxRepository } from '../ports/outbox.repository';
 import type { UnitOfWork } from '../ports/unit-of-work.interface';
 import { Wallet } from '../../domain/wallet/wallet.aggregate';
 import { WagerTransaction } from '../../domain/wager/wager-transaction.aggregate';
@@ -13,9 +14,10 @@ import { WalletLedgerEntryKind } from '../../domain/ledger/wallet-ledger-entry-k
 import { Money } from '../../domain/value-objects/money.value-object';
 import { WalletNotFoundError } from '../../domain/errors/wallet-not-found.error';
 import type { WagerTransactionIdempotencyServicePort } from '../ports/wager-transaction-idempotency.service';
+import { OutboxMessage } from '../../domain/outbox/outbox-message.entity';
 
 describe('ProcessBetUseCase', () => {
-  it('should successfully process a bet, debit the wallet, create ledger entry, mark transaction as processed and commit', async () => {
+  it('should successfully process a bet, debit the wallet, create ledger entry, enqueue outbox messages, mark transaction as processed and commit', async () => {
     const initialBalance = Money.from({ amount: '100.00', currency: 'BRL' });
     const wallet = Wallet.restore('wallet-1', 'player-1', 'BRL', initialBalance, 1, new Date(), new Date());
 
@@ -23,6 +25,7 @@ describe('ProcessBetUseCase', () => {
     let addedTransaction: WagerTransaction | null = null;
     let addedLedgerEntry: WalletLedgerEntry | null = null;
     let updatedWallet: Wallet | null = null;
+    const addedOutboxMessages: OutboxMessage[] = [];
 
     const mockWagerTransactionRepository: WagerTransactionRepository = {
       findById: mock(async () => null),
@@ -50,6 +53,14 @@ describe('ProcessBetUseCase', () => {
       findAllByWalletId: mock(async () => []),
     };
 
+    const mockOutboxRepository: OutboxRepository = {
+      add: mock(async (msg: OutboxMessage) => {
+        addedOutboxMessages.push(msg);
+      }),
+      findPending: mock(async () => []),
+      update: mock(async () => {}),
+    };
+
     const mockUnitOfWork: UnitOfWork = {
       commit: mock(async () => {
         commitCalled = true;
@@ -64,6 +75,7 @@ describe('ProcessBetUseCase', () => {
       mockWagerTransactionRepository,
       mockWalletRepository,
       mockWalletLedgerRepository,
+      mockOutboxRepository,
       mockUnitOfWork,
       mockIdempotencyService,
     );
@@ -89,7 +101,8 @@ describe('ProcessBetUseCase', () => {
     expect(addedLedgerEntry).not.toBeNull();
     expect(addedLedgerEntry?.kind).toBe(WalletLedgerEntryKind.DEBIT);
     expect(addedLedgerEntry?.money.toString()).toBe('30.00');
-    expect(updatedWallet?.currentBalance.toString()).toBe('70.00');
+    expect(updatedWallet?.balance.toString()).toBe('70.00');
+    expect(addedOutboxMessages.length).toBe(2); // WagerTransactionProcessed e WalletBalanceChanged
     expect(commitCalled).toBe(true);
   });
 
@@ -135,6 +148,12 @@ describe('ProcessBetUseCase', () => {
       findAllByWalletId: mock(async () => []),
     };
 
+    const mockOutboxRepository: OutboxRepository = {
+      add: mock(async () => {}),
+      findPending: mock(async () => []),
+      update: mock(async () => {}),
+    };
+
     const mockUnitOfWork: UnitOfWork = {
       commit: mock(async () => {
         commitCalled = true;
@@ -149,6 +168,7 @@ describe('ProcessBetUseCase', () => {
       mockWagerTransactionRepository,
       mockWalletRepository,
       mockWalletLedgerRepository,
+      mockOutboxRepository,
       mockUnitOfWork,
       mockIdempotencyService,
     );
@@ -192,6 +212,12 @@ describe('ProcessBetUseCase', () => {
       findAllByWalletId: mock(async () => []),
     };
 
+    const mockOutboxRepository: OutboxRepository = {
+      add: mock(async () => {}),
+      findPending: mock(async () => []),
+      update: mock(async () => {}),
+    };
+
     const mockUnitOfWork: UnitOfWork = {
       commit: mock(async () => {}),
     };
@@ -204,6 +230,7 @@ describe('ProcessBetUseCase', () => {
       mockWagerTransactionRepository,
       mockWalletRepository,
       mockWalletLedgerRepository,
+      mockOutboxRepository,
       mockUnitOfWork,
       mockIdempotencyService,
     );

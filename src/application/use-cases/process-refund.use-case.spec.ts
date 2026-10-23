@@ -3,6 +3,7 @@ import { ProcessRefundUseCase } from './process-refund.use-case';
 import type { WagerTransactionRepository } from '../ports/wager-transaction.repository';
 import type { WalletRepository } from '../ports/wallet.repository';
 import type { WalletLedgerRepository } from '../ports/wallet-ledger.repository';
+import type { OutboxRepository } from '../ports/outbox.repository';
 import type { UnitOfWork } from '../ports/unit-of-work.interface';
 import { Wallet } from '../../domain/wallet/wallet.aggregate';
 import { WagerTransaction } from '../../domain/wager/wager-transaction.aggregate';
@@ -13,6 +14,7 @@ import { WalletLedgerEntryKind } from '../../domain/ledger/wallet-ledger-entry-k
 import { Money } from '../../domain/value-objects/money.value-object';
 import { WalletNotFoundError } from '../../domain/errors/wallet-not-found.error';
 import type { WagerTransactionIdempotencyServicePort } from '../ports/wager-transaction-idempotency.service';
+import { OutboxMessage } from '../../domain/outbox/outbox-message.entity';
 
 describe('ProcessRefundUseCase', () => {
   it('should successfully process a refund, credit the wallet, create CREDIT ledger entry, mark transaction as processed with reference and commit', async () => {
@@ -23,6 +25,7 @@ describe('ProcessRefundUseCase', () => {
     let addedTransaction: WagerTransaction | null = null;
     let addedLedgerEntry: WalletLedgerEntry | null = null;
     let updatedWallet: Wallet | null = null;
+    const addedOutboxMessages: OutboxMessage[] = [];
 
     const mockWagerTransactionRepository: WagerTransactionRepository = {
       findById: mock(async () => null),
@@ -50,6 +53,14 @@ describe('ProcessRefundUseCase', () => {
       findAllByWalletId: mock(async () => []),
     };
 
+    const mockOutboxRepository: OutboxRepository = {
+      add: mock(async (msg: OutboxMessage) => {
+        addedOutboxMessages.push(msg);
+      }),
+      findPending: mock(async () => []),
+      update: mock(async () => {}),
+    };
+
     const mockUnitOfWork: UnitOfWork = {
       commit: mock(async () => {
         commitCalled = true;
@@ -64,6 +75,7 @@ describe('ProcessRefundUseCase', () => {
       mockWagerTransactionRepository,
       mockWalletRepository,
       mockWalletLedgerRepository,
+      mockOutboxRepository,
       mockUnitOfWork,
       mockIdempotencyService,
     );
@@ -91,7 +103,8 @@ describe('ProcessRefundUseCase', () => {
     expect(addedLedgerEntry).not.toBeNull();
     expect(addedLedgerEntry?.kind).toBe(WalletLedgerEntryKind.CREDIT);
     expect(addedLedgerEntry?.money.toString()).toBe('30.00');
-    expect(updatedWallet?.currentBalance.toString()).toBe('100.00');
+    expect(updatedWallet?.balance.toString()).toBe('100.00');
+    expect(addedOutboxMessages.length).toBe(2);
     expect(commitCalled).toBe(true);
   });
 
@@ -138,6 +151,12 @@ describe('ProcessRefundUseCase', () => {
       findAllByWalletId: mock(async () => []),
     };
 
+    const mockOutboxRepository: OutboxRepository = {
+      add: mock(async () => {}),
+      findPending: mock(async () => []),
+      update: mock(async () => {}),
+    };
+
     const mockUnitOfWork: UnitOfWork = {
       commit: mock(async () => {
         commitCalled = true;
@@ -152,6 +171,7 @@ describe('ProcessRefundUseCase', () => {
       mockWagerTransactionRepository,
       mockWalletRepository,
       mockWalletLedgerRepository,
+      mockOutboxRepository,
       mockUnitOfWork,
       mockIdempotencyService,
     );
@@ -196,6 +216,12 @@ describe('ProcessRefundUseCase', () => {
       findAllByWalletId: mock(async () => []),
     };
 
+    const mockOutboxRepository: OutboxRepository = {
+      add: mock(async () => {}),
+      findPending: mock(async () => []),
+      update: mock(async () => {}),
+    };
+
     const mockUnitOfWork: UnitOfWork = {
       commit: mock(async () => {}),
     };
@@ -208,6 +234,7 @@ describe('ProcessRefundUseCase', () => {
       mockWagerTransactionRepository,
       mockWalletRepository,
       mockWalletLedgerRepository,
+      mockOutboxRepository,
       mockUnitOfWork,
       mockIdempotencyService,
     );

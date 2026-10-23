@@ -2,6 +2,7 @@ import { describe, expect, it, mock } from 'bun:test';
 import { ProcessLossUseCase } from './process-loss.use-case';
 import type { WagerTransactionRepository } from '../ports/wager-transaction.repository';
 import type { WalletRepository } from '../ports/wallet.repository';
+import type { OutboxRepository } from '../ports/outbox.repository';
 import type { UnitOfWork } from '../ports/unit-of-work.interface';
 import { Wallet } from '../../domain/wallet/wallet.aggregate';
 import { WagerTransaction } from '../../domain/wager/wager-transaction.aggregate';
@@ -10,6 +11,7 @@ import { WagerTransactionStatus } from '../../domain/wager/wager-transaction-sta
 import { Money } from '../../domain/value-objects/money.value-object';
 import { WalletNotFoundError } from '../../domain/errors/wallet-not-found.error';
 import type { WagerTransactionIdempotencyServicePort } from '../ports/wager-transaction-idempotency.service';
+import { OutboxMessage } from '../../domain/outbox/outbox-message.entity';
 
 describe('ProcessLossUseCase', () => {
   it('should successfully process a loss, mark transaction as processed and commit without changing wallet balance', async () => {
@@ -19,6 +21,7 @@ describe('ProcessLossUseCase', () => {
     let commitCalled = false;
     let addedTransaction: WagerTransaction | null = null;
     let walletUpdateCalled = false;
+    const addedOutboxMessages: OutboxMessage[] = [];
 
     const mockWagerTransactionRepository: WagerTransactionRepository = {
       findById: mock(async () => null),
@@ -37,6 +40,14 @@ describe('ProcessLossUseCase', () => {
       add: mock(async () => {}),
     };
 
+    const mockOutboxRepository: OutboxRepository = {
+      add: mock(async (msg: OutboxMessage) => {
+        addedOutboxMessages.push(msg);
+      }),
+      findPending: mock(async () => []),
+      update: mock(async () => {}),
+    };
+
     const mockUnitOfWork: UnitOfWork = {
       commit: mock(async () => {
         commitCalled = true;
@@ -50,6 +61,7 @@ describe('ProcessLossUseCase', () => {
     const useCase = new ProcessLossUseCase(
       mockWagerTransactionRepository,
       mockWalletRepository,
+      mockOutboxRepository,
       mockUnitOfWork,
       mockIdempotencyService,
     );
@@ -72,8 +84,9 @@ describe('ProcessLossUseCase', () => {
     expect(result.status).toBe(WagerTransactionStatus.Processed);
     expect(result.processedAt).toBeDefined();
     expect(addedTransaction).not.toBeNull();
-    expect(wallet.currentBalance.toString()).toBe('70.00');
+    expect(wallet.balance.toString()).toBe('70.00');
     expect(walletUpdateCalled).toBe(false);
+    expect(addedOutboxMessages.length).toBe(1);
     expect(commitCalled).toBe(true);
   });
 
@@ -112,6 +125,12 @@ describe('ProcessLossUseCase', () => {
       add: mock(async () => {}),
     };
 
+    const mockOutboxRepository: OutboxRepository = {
+      add: mock(async () => {}),
+      findPending: mock(async () => []),
+      update: mock(async () => {}),
+    };
+
     const mockUnitOfWork: UnitOfWork = {
       commit: mock(async () => {
         commitCalled = true;
@@ -125,6 +144,7 @@ describe('ProcessLossUseCase', () => {
     const useCase = new ProcessLossUseCase(
       mockWagerTransactionRepository,
       mockWalletRepository,
+      mockOutboxRepository,
       mockUnitOfWork,
       mockIdempotencyService,
     );
@@ -161,6 +181,12 @@ describe('ProcessLossUseCase', () => {
       add: mock(async () => {}),
     };
 
+    const mockOutboxRepository: OutboxRepository = {
+      add: mock(async () => {}),
+      findPending: mock(async () => []),
+      update: mock(async () => {}),
+    };
+
     const mockUnitOfWork: UnitOfWork = {
       commit: mock(async () => {}),
     };
@@ -172,6 +198,7 @@ describe('ProcessLossUseCase', () => {
     const useCase = new ProcessLossUseCase(
       mockWagerTransactionRepository,
       mockWalletRepository,
+      mockOutboxRepository,
       mockUnitOfWork,
       mockIdempotencyService,
     );

@@ -1,12 +1,15 @@
 import { Inject, Injectable } from "@nestjs/common";
 import type { WagerTransactionRepository } from "../ports/wager-transaction.repository";
 import type { WalletRepository } from "../ports/wallet.repository";
+import type { OutboxRepository } from "../ports/outbox.repository";
 import type { UnitOfWork } from "../ports/unit-of-work.interface";
 import type { WagerTransactionIdempotencyServicePort } from "../ports/wager-transaction-idempotency.service";
 import { WagerTransaction } from "../../domain/wager/wager-transaction.aggregate";
 import { WagerTransactionKind } from "../../domain/wager/wager-transaction-kind.enum";
 import { Money } from "../../domain/value-objects/money.value-object";
 import { WalletNotFoundError } from "../../domain/errors/wallet-not-found.error";
+import { OutboxMessage } from "../../domain/outbox/outbox-message.entity";
+import { WagerTransactionProcessed } from "../../domain/events/wager-transaction-processed.event";
 
 export interface ProcessLossCommand {
   providerId: string;
@@ -28,6 +31,8 @@ export class ProcessLossUseCase {
     private readonly wagerTransactionRepository: WagerTransactionRepository,
     @Inject("WalletRepository")
     private readonly walletRepository: WalletRepository,
+    @Inject("OutboxRepository")
+    private readonly outboxRepository: OutboxRepository,
     @Inject("UnitOfWork")
     private readonly unitOfWork: UnitOfWork,
     @Inject("WagerTransactionIdempotencyServicePort")
@@ -69,7 +74,21 @@ export class ProcessLossUseCase {
 
     wagerTransaction.markProcessed();
 
+    const correlationId = command.idempotencyKey;
+
+    const transactionProcessedEvent = WagerTransactionProcessed.from(
+      wagerTransaction,
+      { correlationId },
+    );
+
+    const outboxProcessedMessage = OutboxMessage.create({
+      aggregateId: transactionProcessedEvent.aggregateId,
+      eventType: transactionProcessedEvent.eventType,
+      payload: transactionProcessedEvent.toJSON(),
+    });
+
     await this.wagerTransactionRepository.add(wagerTransaction);
+    await this.outboxRepository.add(outboxProcessedMessage);
     await this.unitOfWork.commit();
 
     return wagerTransaction;
