@@ -12,6 +12,7 @@ import { WalletLedgerEntry } from '../../domain/ledger/wallet-ledger-entry.entit
 import { WalletLedgerEntryKind } from '../../domain/ledger/wallet-ledger-entry-kind.enum';
 import { Money } from '../../domain/value-objects/money.value-object';
 import { WalletNotFoundError } from '../../domain/errors/wallet-not-found.error';
+import { WagerTransactionIdempotencyServicePort } from '../ports/wager-transaction-idempotency.service';
 
 describe('ProcessWinUseCase', () => {
   it('should successfully process a win, credit the wallet, create CREDIT ledger entry, mark transaction as processed and commit', async () => {
@@ -55,11 +56,16 @@ describe('ProcessWinUseCase', () => {
       }),
     };
 
+    const mockIdempotencyService: WagerTransactionIdempotencyServicePort = {
+      ensureUnique: mock(async () => null),
+    };
+
     const useCase = new ProcessWinUseCase(
       mockWagerTransactionRepository,
       mockWalletRepository,
       mockWalletLedgerRepository,
       mockUnitOfWork,
+      mockIdempotencyService,
     );
 
     const result = await useCase.execute({
@@ -135,11 +141,16 @@ describe('ProcessWinUseCase', () => {
       }),
     };
 
+    const mockIdempotencyService: WagerTransactionIdempotencyServicePort = {
+      ensureUnique: mock(async () => existingTransaction),
+    };
+
     const useCase = new ProcessWinUseCase(
       mockWagerTransactionRepository,
       mockWalletRepository,
       mockWalletLedgerRepository,
       mockUnitOfWork,
+      mockIdempotencyService,
     );
 
     const result = await useCase.execute({
@@ -185,11 +196,16 @@ describe('ProcessWinUseCase', () => {
       commit: mock(async () => {}),
     };
 
+    const mockIdempotencyService: WagerTransactionIdempotencyServicePort = {
+      ensureUnique: mock(async () => null),
+    };
+
     const useCase = new ProcessWinUseCase(
       mockWagerTransactionRepository,
       mockWalletRepository,
       mockWalletLedgerRepository,
       mockUnitOfWork,
+      mockIdempotencyService,
     );
 
     await expect(

@@ -1,6 +1,7 @@
 import { WagerTransactionRepository } from '../ports/wager-transaction.repository';
 import { WalletRepository } from '../ports/wallet.repository';
 import { UnitOfWork } from '../ports/unit-of-work.interface';
+import { WagerTransactionIdempotencyServicePort } from '../ports/wager-transaction-idempotency.service';
 import { WagerTransaction } from '../../domain/wager/wager-transaction.aggregate';
 import { WagerTransactionKind } from '../../domain/wager/wager-transaction-kind.enum';
 import { Money } from '../../domain/value-objects/money.value-object';
@@ -24,11 +25,13 @@ export class ProcessLossUseCase {
     private readonly wagerTransactionRepository: WagerTransactionRepository,
     private readonly walletRepository: WalletRepository,
     private readonly unitOfWork: UnitOfWork,
+    private readonly idempotencyService: WagerTransactionIdempotencyServicePort,
   ) {}
 
   public async execute(command: ProcessLossCommand): Promise<WagerTransaction> {
-    const existingTransaction = await this.wagerTransactionRepository.findByIdempotencyKey(
+    const existingTransaction = await this.idempotencyService.ensureUnique(
       command.idempotencyKey,
+      command.payloadHash,
     );
     
     if (existingTransaction) {

@@ -12,6 +12,7 @@ import { WalletLedgerEntry } from '../../domain/ledger/wallet-ledger-entry.entit
 import { WalletLedgerEntryKind } from '../../domain/ledger/wallet-ledger-entry-kind.enum';
 import { Money } from '../../domain/value-objects/money.value-object';
 import { WalletNotFoundError } from '../../domain/errors/wallet-not-found.error';
+import { WagerTransactionIdempotencyServicePort } from '../ports/wager-transaction-idempotency.service';
 
 describe('ProcessBetUseCase', () => {
   it('should successfully process a bet, debit the wallet, create ledger entry, mark transaction as processed and commit', async () => {
@@ -55,11 +56,16 @@ describe('ProcessBetUseCase', () => {
       }),
     };
 
+    const mockIdempotencyService: WagerTransactionIdempotencyServicePort = {
+      ensureUnique: mock(async () => null),
+    };
+
     const useCase = new ProcessBetUseCase(
       mockWagerTransactionRepository,
       mockWalletRepository,
       mockWalletLedgerRepository,
       mockUnitOfWork,
+      mockIdempotencyService,
     );
 
     const result = await useCase.execute({
@@ -135,11 +141,16 @@ describe('ProcessBetUseCase', () => {
       }),
     };
 
+    const mockIdempotencyService: WagerTransactionIdempotencyServicePort = {
+      ensureUnique: mock(async () => existingTransaction),
+    };
+
     const useCase = new ProcessBetUseCase(
       mockWagerTransactionRepository,
       mockWalletRepository,
       mockWalletLedgerRepository,
       mockUnitOfWork,
+      mockIdempotencyService,
     );
 
     const result = await useCase.execute({
@@ -185,11 +196,16 @@ describe('ProcessBetUseCase', () => {
       commit: mock(async () => {}),
     };
 
+    const mockIdempotencyService: WagerTransactionIdempotencyServicePort = {
+      ensureUnique: mock(async () => null),
+    };
+
     const useCase = new ProcessBetUseCase(
       mockWagerTransactionRepository,
       mockWalletRepository,
       mockWalletLedgerRepository,
       mockUnitOfWork,
+      mockIdempotencyService,
     );
 
     await expect(

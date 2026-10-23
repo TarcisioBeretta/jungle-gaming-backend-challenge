@@ -13,6 +13,7 @@ import { WalletLedgerEntryKind } from '../../domain/ledger/wallet-ledger-entry-k
 import { Money } from '../../domain/value-objects/money.value-object';
 import { WalletNotFoundError } from '../../domain/errors/wallet-not-found.error';
 import { OriginalTransactionNotFoundError } from '../../domain/errors/original-transaction-not-found.error';
+import { WagerTransactionIdempotencyServicePort } from '../ports/wager-transaction-idempotency.service';
 
 describe('ProcessRollbackUseCase', () => {
   const baseCommand = {
@@ -83,11 +84,16 @@ describe('ProcessRollbackUseCase', () => {
       }),
     };
 
+    const mockIdempotencyService: WagerTransactionIdempotencyServicePort = {
+      ensureUnique: mock(async () => null),
+    };
+
     const useCase = new ProcessRollbackUseCase(
       mockWagerTransactionRepository,
       mockWalletRepository,
       mockWalletLedgerRepository,
       mockUnitOfWork,
+      mockIdempotencyService,
     );
 
     const result = await useCase.execute({
@@ -154,11 +160,16 @@ describe('ProcessRollbackUseCase', () => {
       commit: mock(async () => {}),
     };
 
+    const mockIdempotencyService: WagerTransactionIdempotencyServicePort = {
+      ensureUnique: mock(async () => null),
+    };
+
     const useCase = new ProcessRollbackUseCase(
       mockWagerTransactionRepository,
       mockWalletRepository,
       mockWalletLedgerRepository,
       mockUnitOfWork,
+      mockIdempotencyService,
     );
 
     const result = await useCase.execute({
@@ -220,11 +231,16 @@ describe('ProcessRollbackUseCase', () => {
       commit: mock(async () => {}),
     };
 
+    const mockIdempotencyService: WagerTransactionIdempotencyServicePort = {
+      ensureUnique: mock(async () => null),
+    };
+
     const useCase = new ProcessRollbackUseCase(
       mockWagerTransactionRepository,
       mockWalletRepository,
       mockWalletLedgerRepository,
       mockUnitOfWork,
+      mockIdempotencyService,
     );
 
     const result = await useCase.execute({
@@ -287,11 +303,16 @@ describe('ProcessRollbackUseCase', () => {
       }),
     };
 
+    const mockIdempotencyService: WagerTransactionIdempotencyServicePort = {
+      ensureUnique: mock(async () => existingTransaction),
+    };
+
     const useCase = new ProcessRollbackUseCase(
       mockWagerTransactionRepository,
       mockWalletRepository,
       mockWalletLedgerRepository,
       mockUnitOfWork,
+      mockIdempotencyService,
     );
 
     const result = await useCase.execute(baseCommand);
@@ -326,11 +347,16 @@ describe('ProcessRollbackUseCase', () => {
       commit: mock(async () => {}),
     };
 
+    const mockIdempotencyService: WagerTransactionIdempotencyServicePort = {
+      ensureUnique: mock(async () => null),
+    };
+
     const useCase = new ProcessRollbackUseCase(
       mockWagerTransactionRepository,
       mockWalletRepository,
       mockWalletLedgerRepository,
       mockUnitOfWork,
+      mockIdempotencyService,
     );
 
     await expect(useCase.execute(baseCommand)).rejects.toThrow(WalletNotFoundError);
@@ -363,11 +389,16 @@ describe('ProcessRollbackUseCase', () => {
       commit: mock(async () => {}),
     };
 
+    const mockIdempotencyService: WagerTransactionIdempotencyServicePort = {
+      ensureUnique: mock(async () => null),
+    };
+
     const useCase = new ProcessRollbackUseCase(
       mockWagerTransactionRepository,
       mockWalletRepository,
       mockWalletLedgerRepository,
       mockUnitOfWork,
+      mockIdempotencyService,
     );
 
     await expect(useCase.execute(baseCommand)).rejects.toThrow(OriginalTransactionNotFoundError);

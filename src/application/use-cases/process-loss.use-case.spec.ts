@@ -9,6 +9,7 @@ import { WagerTransactionKind } from '../../domain/wager/wager-transaction-kind.
 import { WagerTransactionStatus } from '../../domain/wager/wager-transaction-status.enum';
 import { Money } from '../../domain/value-objects/money.value-object';
 import { WalletNotFoundError } from '../../domain/errors/wallet-not-found.error';
+import { WagerTransactionIdempotencyServicePort } from '../ports/wager-transaction-idempotency.service';
 
 describe('ProcessLossUseCase', () => {
   it('should successfully process a loss, mark transaction as processed and commit without changing wallet balance', async () => {
@@ -42,10 +43,15 @@ describe('ProcessLossUseCase', () => {
       }),
     };
 
+    const mockIdempotencyService: WagerTransactionIdempotencyServicePort = {
+      ensureUnique: mock(async () => null),
+    };
+
     const useCase = new ProcessLossUseCase(
       mockWagerTransactionRepository,
       mockWalletRepository,
       mockUnitOfWork,
+      mockIdempotencyService,
     );
 
     const result = await useCase.execute({
@@ -112,10 +118,15 @@ describe('ProcessLossUseCase', () => {
       }),
     };
 
+    const mockIdempotencyService: WagerTransactionIdempotencyServicePort = {
+      ensureUnique: mock(async () => existingTransaction),
+    };
+
     const useCase = new ProcessLossUseCase(
       mockWagerTransactionRepository,
       mockWalletRepository,
       mockUnitOfWork,
+      mockIdempotencyService,
     );
 
     const result = await useCase.execute({
@@ -154,10 +165,15 @@ describe('ProcessLossUseCase', () => {
       commit: mock(async () => {}),
     };
 
+    const mockIdempotencyService: WagerTransactionIdempotencyServicePort = {
+      ensureUnique: mock(async () => null),
+    };
+
     const useCase = new ProcessLossUseCase(
       mockWagerTransactionRepository,
       mockWalletRepository,
       mockUnitOfWork,
+      mockIdempotencyService,
     );
 
     await expect(

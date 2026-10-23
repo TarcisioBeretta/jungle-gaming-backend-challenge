@@ -12,6 +12,7 @@ import { WalletLedgerEntry } from '../../domain/ledger/wallet-ledger-entry.entit
 import { WalletLedgerEntryKind } from '../../domain/ledger/wallet-ledger-entry-kind.enum';
 import { Money } from '../../domain/value-objects/money.value-object';
 import { WalletNotFoundError } from '../../domain/errors/wallet-not-found.error';
+import { WagerTransactionIdempotencyServicePort } from '../ports/wager-transaction-idempotency.service';
 
 describe('ProcessRefundUseCase', () => {
   it('should successfully process a refund, credit the wallet, create CREDIT ledger entry, mark transaction as processed with reference and commit', async () => {
@@ -55,11 +56,16 @@ describe('ProcessRefundUseCase', () => {
       }),
     };
 
+    const mockIdempotencyService: WagerTransactionIdempotencyServicePort = {
+      ensureUnique: mock(async () => null),
+    };
+
     const useCase = new ProcessRefundUseCase(
       mockWagerTransactionRepository,
       mockWalletRepository,
       mockWalletLedgerRepository,
       mockUnitOfWork,
+      mockIdempotencyService,
     );
 
     const result = await useCase.execute({
@@ -138,11 +144,16 @@ describe('ProcessRefundUseCase', () => {
       }),
     };
 
+    const mockIdempotencyService: WagerTransactionIdempotencyServicePort = {
+      ensureUnique: mock(async () => existingTransaction),
+    };
+
     const useCase = new ProcessRefundUseCase(
       mockWagerTransactionRepository,
       mockWalletRepository,
       mockWalletLedgerRepository,
       mockUnitOfWork,
+      mockIdempotencyService,
     );
 
     const result = await useCase.execute({
@@ -189,11 +200,16 @@ describe('ProcessRefundUseCase', () => {
       commit: mock(async () => {}),
     };
 
+    const mockIdempotencyService: WagerTransactionIdempotencyServicePort = {
+      ensureUnique: mock(async () => null),
+    };
+
     const useCase = new ProcessRefundUseCase(
       mockWagerTransactionRepository,
       mockWalletRepository,
       mockWalletLedgerRepository,
       mockUnitOfWork,
+      mockIdempotencyService,
     );
 
     await expect(
