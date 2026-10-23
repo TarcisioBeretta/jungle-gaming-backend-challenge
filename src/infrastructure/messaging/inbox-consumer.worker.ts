@@ -1,5 +1,5 @@
 import { Injectable, Logger, OnModuleDestroy, OnModuleInit, Inject } from '@nestjs/common';
-import { SQSClient, ReceiveMessageCommand, DeleteMessageCommand } from '@aws-sdk/client-sqs';
+import { SQSClient, ReceiveMessageCommand, DeleteMessageCommand, Message } from '@aws-sdk/client-sqs';
 import { InboxRepository } from '../../application/ports/inbox.repository';
 import { UnitOfWork } from '../../application/ports/unit-of-work.interface';
 import { InboxMessage } from '../../domain/inbox/inbox-message.entity';
@@ -39,15 +39,19 @@ export class InboxConsumerWorker implements OnModuleInit, OnModuleDestroy {
   private readonly consumerName = 'wager-transaction-consumer';
 
   constructor(
+    @Inject('InboxRepository')
     private readonly inboxRepository: InboxRepository,
+    @Inject('UnitOfWork')
     private readonly unitOfWork: UnitOfWork,
     private readonly processBetUseCase: ProcessBetUseCase,
     private readonly processWinUseCase: ProcessWinUseCase,
     private readonly processLossUseCase: ProcessLossUseCase,
     private readonly processRefundUseCase: ProcessRefundUseCase,
     private readonly processRollbackUseCase: ProcessRollbackUseCase,
-    @Inject(SQS_CLIENT) private readonly sqsClient: SQSClient,
-    @Inject(SQS_QUEUE_URL) private readonly queueUrl: string,
+    @Inject(SQS_CLIENT)
+    private readonly sqsClient: SQSClient,
+    @Inject(SQS_QUEUE_URL)
+    private readonly queueUrl: string,
   ) {}
 
   public onModuleInit(): void {
@@ -70,7 +74,7 @@ export class InboxConsumerWorker implements OnModuleInit, OnModuleDestroy {
 
         if (response.Messages && response.Messages.length > 0) {
           for (const message of response.Messages) {
-            await this.safeProcessMessage(message.MessageId, message.Body, message.ReceiptHandle);
+            await this.safeProcessMessage(message);
           }
         }
       } catch (error: unknown) {
@@ -91,19 +95,16 @@ export class InboxConsumerWorker implements OnModuleInit, OnModuleDestroy {
     return this.sqsClient.send(command);
   }
 
-  private async safeProcessMessage(
-    messageId?: string,
-    rawBody?: string,
-    receiptHandle?: string,
-  ): Promise<void> {
+  private async safeProcessMessage(message: Message): Promise<void> {
+    const messageId = message.MessageId;
     try {
-      await this.processMessage(rawBody, receiptHandle);
+      await this.processSingleMessage(message.Body, message.ReceiptHandle);
     } catch (error: unknown) {
       this.logger.error(`Failed to process SQS message ${messageId}:`, error);
     }
   }
 
-  private async processMessage(rawBody?: string, receiptHandle?: string): Promise<void> {
+  private async processSingleMessage(rawBody?: string, receiptHandle?: string): Promise<void> {
     if (!rawBody || !receiptHandle) return;
 
     const parsedBody = this.parseMessageBody(rawBody);
@@ -116,25 +117,7 @@ export class InboxConsumerWorker implements OnModuleInit, OnModuleDestroy {
       return;
     }
 
-    const idempotencyKey = this.resolveIdempotencyKey(data);
-    const payloadHash = this.buildPayloadHash(data, kind);
-
-    const commonCommand = {
-      providerId: data.providerId,
-      externalTransactionId: data.externalTransactionId,
-      idempotencyKey,
-      payloadHash,
-      walletId: data.walletId,
-      playerId: data.playerId,
-      roundId: data.roundId,
-      gameId: data.gameId,
-      amount: data.money.amount,
-      currency: data.money.currency,
-    };
-
-    await this.ensureInboxRegistered(messageId, payloadHash, data);
-
-    await this.executeDomainAndCommit(kind, data, commonCommand, messageId);
+    await this.registerAndExecuteDomain(messageId, kind, data);
 
     await this.deleteMessage(receiptHandle);
     this.logger.log(`Successfully processed and acknowledged SQS message ${messageId}`);
@@ -164,12 +147,13 @@ export class InboxConsumerWorker implements OnModuleInit, OnModuleDestroy {
     return false;
   }
 
-  private resolveIdempotencyKey(data: SqsWagerMessageBody['data']): string {
-    return data.idempotencyKey || `${data.providerId}:${data.externalTransactionId}`;
-  }
-
-  private buildPayloadHash(data: SqsWagerMessageBody['data'], kind: string): string {
-    return PayloadHash.from({
+  private async registerAndExecuteDomain(
+    messageId: string,
+    kind: string,
+    data: SqsWagerMessageBody['data'],
+  ): Promise<void> {
+    const idempotencyKey = data.idempotencyKey || `${data.providerId}:${data.externalTransactionId}`;
+    const payloadHash = PayloadHash.from({
       providerId: data.providerId,
       externalTransactionId: data.externalTransactionId,
       walletId: data.walletId,
@@ -180,6 +164,39 @@ export class InboxConsumerWorker implements OnModuleInit, OnModuleDestroy {
       money: data.money,
       referenceExternalTransactionId: data.referenceExternalTransactionId,
     });
+
+    const commonCommand = {
+      providerId: data.providerId,
+      externalTransactionId: data.externalTransactionId,
+      idempotencyKey,
+      payloadHash,
+      walletId: data.walletId,
+      playerId: data.playerId,
+      roundId: data.roundId,
+      gameId: data.gameId,
+      amount: data.money.amount,
+      currency: data.money.currency,
+    };
+
+    await this.ensureInboxRegistered(messageId, payloadHash, data);
+
+    try {
+      await this.executeUseCase(kind, data, commonCommand);
+
+      const inboxMessage = await this.inboxRepository.findByConsumerAndMessageId(
+        this.consumerName,
+        messageId,
+      );
+      if (inboxMessage) {
+        inboxMessage.markProcessed();
+        await this.inboxRepository.update(inboxMessage);
+      }
+
+      await this.unitOfWork.commit();
+    } catch (error: unknown) {
+      this.logger.error(`Domain/Infrastructure error processing SQS message ${messageId}:`, error);
+      throw error;
+    }
   }
 
   private async ensureInboxRegistered(
@@ -203,31 +220,6 @@ export class InboxConsumerWorker implements OnModuleInit, OnModuleDestroy {
     }
 
     return inboxMessage;
-  }
-
-  private async executeDomainAndCommit(
-    kind: string,
-    data: SqsWagerMessageBody['data'],
-    commonCommand: any,
-    messageId: string,
-  ): Promise<void> {
-    try {
-      await this.executeUseCase(kind, data, commonCommand);
-
-      const inboxMessage = await this.inboxRepository.findByConsumerAndMessageId(
-        this.consumerName,
-        messageId,
-      );
-      if (inboxMessage) {
-        inboxMessage.markProcessed();
-        await this.inboxRepository.update(inboxMessage);
-      }
-
-      await this.unitOfWork.commit();
-    } catch (error: unknown) {
-      this.logger.error(`Domain/Infrastructure error processing SQS message ${messageId}:`, error);
-      throw error;
-    }
   }
 
   private async executeUseCase(kind: string, data: SqsWagerMessageBody['data'], common: any): Promise<void> {
