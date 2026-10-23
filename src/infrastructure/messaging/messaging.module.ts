@@ -4,9 +4,7 @@ import { InboxConsumerWorker } from "./inbox-consumer.worker";
 import { DatabaseModule } from "../database/database.module";
 import { OutboxPublisherWorker } from "./outbox-publisher.worker";
 import { ApplicationModule } from "src/application/application.module";
-
-export const SQS_CLIENT = "SQS_CLIENT";
-export const SQS_QUEUE_URL = "SQS_QUEUE_URL";
+import { SQS_CLIENT, SQS_QUEUE_URL } from "./sqs.constants";
 
 @Module({
   imports: [DatabaseModule, ApplicationModule],

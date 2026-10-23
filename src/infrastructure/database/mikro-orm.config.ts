@@ -16,7 +16,7 @@ export default defineConfig({
   dbName: process.env.POSTGRES_DB ?? 'wagering_db',
   user: process.env.POSTGRES_USER ?? 'wagering_user',
   password: process.env.POSTGRES_PASSWORD ?? 'wagering_pass',
-  host: process.env.POSTGRES_HOST ?? 'localhost',
+  host: process.env.POSTGRES_HOST ?? 'postgres',
   port: Number(process.env.POSTGRES_PORT ?? 5432),
   debug: process.env.NODE_ENV !== 'production',
   migrations: {

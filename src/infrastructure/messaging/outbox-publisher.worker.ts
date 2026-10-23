@@ -7,9 +7,9 @@ import {
 } from "@nestjs/common";
 import { Interval } from "@nestjs/schedule";
 import { SQSClient, SendMessageCommand } from "@aws-sdk/client-sqs";
-import { SQS_CLIENT } from "./messaging.module";
-import { OutboxRepository } from "src/application/ports/outbox.repository";
-import { UnitOfWork } from "src/application/ports/unit-of-work.interface";
+import { SQS_CLIENT } from "./sqs.constants";
+import type { OutboxRepository } from "src/application/ports/outbox.repository";
+import type { UnitOfWork } from "src/application/ports/unit-of-work.interface";
 import { OutboxMessage } from "src/domain/outbox/outbox-message.entity";
 
 @Injectable()

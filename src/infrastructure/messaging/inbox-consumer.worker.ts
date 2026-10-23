@@ -1,7 +1,7 @@
 import { Injectable, Logger, OnModuleDestroy, OnModuleInit, Inject } from '@nestjs/common';
 import { SQSClient, ReceiveMessageCommand, DeleteMessageCommand, Message } from '@aws-sdk/client-sqs';
-import { InboxRepository } from '../../application/ports/inbox.repository';
-import { UnitOfWork } from '../../application/ports/unit-of-work.interface';
+import type { InboxRepository } from '../../application/ports/inbox.repository';
+import type { UnitOfWork } from '../../application/ports/unit-of-work.interface';
 import { InboxMessage } from '../../domain/inbox/inbox-message.entity';
 import { ProcessBetUseCase } from '../../application/use-cases/process-bet.use-case';
 import { ProcessWinUseCase } from '../../application/use-cases/process-win.use-case';
@@ -9,7 +9,7 @@ import { ProcessLossUseCase } from '../../application/use-cases/process-loss.use
 import { ProcessRefundUseCase } from '../../application/use-cases/process-refund.use-case';
 import { ProcessRollbackUseCase } from '../../application/use-cases/process-rollback.use-case';
 import { PayloadHash } from '../../application/utils/payload-hash.util';
-import { SQS_CLIENT, SQS_QUEUE_URL } from './messaging.module';
+import { SQS_CLIENT, SQS_QUEUE_URL } from './sqs.constants';
 
 interface SqsWagerMessageBody {
   messageId: string;
