@@ -13,11 +13,11 @@ import { SQS_CLIENT, SQS_QUEUE_URL } from "./sqs.constants";
       provide: SQS_CLIENT,
       useFactory: () => {
         return new SQSClient({
-          region: process.env.AWS_REGION || "us-east-1",
-          endpoint: process.env.AWS_SQS_ENDPOINT || "http://localstack:4566",
+          region: process.env.AWS_REGION,
+          endpoint: process.env.AWS_SQS_ENDPOINT,
           credentials: {
-            accessKeyId: process.env.AWS_ACCESS_KEY_ID || "test",
-            secretAccessKey: process.env.AWS_SECRET_ACCESS_KEY || "test",
+            accessKeyId: process.env.AWS_ACCESS_KEY_ID ?? "test",
+            secretAccessKey: process.env.AWS_SECRET_ACCESS_KEY ?? "test",
           },
         });
       },
@@ -25,10 +25,7 @@ import { SQS_CLIENT, SQS_QUEUE_URL } from "./sqs.constants";
     {
       provide: SQS_QUEUE_URL,
       useFactory: () => {
-        return (
-          process.env.SQS_WAGER_QUEUE_URL ||
-          "http://localstack:4566/000000000000/wager-transactions.fifo"
-        );
+        return process.env.SQS_WAGER_QUEUE_URL;
       },
     },
     InboxConsumerWorker,

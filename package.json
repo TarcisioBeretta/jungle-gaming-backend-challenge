@@ -6,7 +6,9 @@
   "scripts": {
     "start:dev": "bun --watch src/main.ts",
     "build": "tsc",
-    "start": "bun run src/main.ts"
+    "start": "bun run src/main.ts",
+    "migration:up": "bun x mikro-orm migration:up --config ./src/infrastructure/database/mikro-orm.config.ts",
+    "migration:create": "bun x mikro-orm migration:create --config ./src/infrastructure/database/mikro-orm.config.ts"
   },
   "devDependencies": {
     "@mikro-orm/cli": "^7.2.5",

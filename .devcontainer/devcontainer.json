@@ -16,5 +16,6 @@
     }
   },
   "forwardPorts": [3000, 5432, 4566],
-  "remoteUser": "root"
+  "remoteUser": "node",
+  "updateRemoteUserUID": true
 }

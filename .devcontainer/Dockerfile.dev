@@ -3,10 +3,18 @@ FROM ubuntu:22.04
 WORKDIR /workspace
 
 # Install system packages required for VS Code extensions and tooling
-RUN apt-get update && apt-get install -y git curl unzip && rm -rf /var/lib/apt/lists/*
+RUN apt-get update && apt-get install -y git curl unzip sudo && rm -rf /var/lib/apt/lists/*
+
+RUN useradd -m -s /bin/bash -u 1000 node && \
+    echo "node ALL=(ALL) NOPASSWD:ALL" >> /etc/sudoers
+
+USER node
+ENV HOME=/home/node
 
 # Install Bun
 RUN curl -fsSL https://bun.sh/install | bash
-ENV PATH="/root/.bun/bin:${PATH}"
+ENV PATH="/home/node/.bun/bin:${PATH}"
+
+WORKDIR /workspace
 
 CMD ["sleep", "infinity"]
